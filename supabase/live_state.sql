@@ -5,11 +5,8 @@
 --
 -- This file is a consolidated snapshot of every schema change applied to the
 -- live Supabase database. It is NOT meant to be run as-is on an existing
--- database (use schema.sql + migrations/ for that). It exists so future audits
--- can diff reality against this file.
---
--- To VERIFY this file matches the live DB, run supabase/audit_queries.sql in
--- the Supabase SQL Editor and compare the output to the definitions below.
+-- database (use schema.sql + migration_*.sql for that). It exists so future
+-- audits can diff reality against this file.
 -- ============================================================================
 
 
@@ -267,7 +264,14 @@ grant execute on function public.is_email_invited(text) to anon, authenticated;
 --   set role = 'admin'
 --   where id = (select id from auth.users order by created_at asc limit 1);
 --
--- Not replayable; only included for audit context.
+-- After enabling invite-only signup, existing users were back-seeded into the
+-- allowlist so none of them get locked out if they ever need to re-register:
+--
+--   insert into public.invited_emails (email)
+--   select email from auth.users
+--   on conflict do nothing;
+--
+-- Neither is replayable; only included for audit context.
 
 
 -- ==========================================
