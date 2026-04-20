@@ -1,5 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { HeroBillboard } from "./HeroBillboard";
+
+const FAMILY_SLIDES = [
+  { src: "/family-2.jpg", position: "center 60%" },
+  { src: "/family-1.jpg", position: "center 25%" },
+  { src: "/family-3.jpg", position: "center 25%" },
+  { src: "/family-4.jpg", position: "center 25%" },
+  { src: "/family-5.jpg", position: "center 20%" },
+  { src: "/family-6.jpg", position: "center 20%" },
+  { src: "/family-7.jpg", position: "center 25%" },
+  { src: "/family-8.jpg", position: "center" },
+];
 
 export default async function Home() {
   const supabase = await createClient();
@@ -15,7 +27,7 @@ export default async function Home() {
 
   const { data: titles } = await supabase
     .from("titles")
-    .select("id, name, year, kind, poster_url")
+    .select("id, name, year, kind, overview, poster_url, backdrop_url")
     .eq("status", "ready")
     .order("created_at", { ascending: false });
 
@@ -24,8 +36,12 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between px-6 py-4 sm:px-12 lg:px-20">
-        <Link href="/" className="text-lg font-semibold tracking-wide text-accent">
+      <header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-6 py-4 backdrop-blur-[2px] sm:px-12 lg:px-20">
+        <Link
+          href="/"
+          className="text-xl font-black tracking-tight text-accent"
+          style={{ letterSpacing: "-0.02em" }}
+        >
           FAMFLIX
         </Link>
         <div className="flex items-center gap-3 text-sm text-zinc-300">
@@ -37,7 +53,7 @@ export default async function Home() {
               + Upload
             </Link>
           )}
-          <span>
+          <span className="hidden sm:inline">
             Hi,{" "}
             <span className="text-white">
               {profile?.display_name ?? user?.email}
@@ -54,23 +70,21 @@ export default async function Home() {
         </div>
       </header>
 
-      <section className="relative flex min-h-[50vh] flex-col items-start justify-end gap-6 overflow-hidden px-6 pb-16 pt-16 sm:px-12 lg:px-20">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-zinc-900 via-black to-zinc-950" />
-        <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-black to-transparent" />
-        <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
-          Your family library.
-        </h1>
-        <p className="max-w-xl text-lg text-zinc-300">
-          {list.length > 0
-            ? `${list.length} title${list.length === 1 ? "" : "s"} ready to watch.`
-            : "Nothing here yet. Upload the first one."}
-        </p>
-      </section>
+      <HeroBillboard
+        titles={list.map((t) => ({
+          id: t.id,
+          name: t.name,
+          year: t.year,
+          kind: t.kind,
+          overview: t.overview,
+          backdrop_url: t.backdrop_url,
+        }))}
+        fallbackSlides={FAMILY_SLIDES}
+        canUpload={canUpload}
+      />
 
-      <section className="px-6 py-8 sm:px-12 lg:px-20">
-        <h2 className="mb-6 text-xl font-semibold text-zinc-200">
-          Recently Added
-        </h2>
+      <section className="-mt-16 px-6 pb-16 sm:px-12 sm:-mt-20 lg:px-20">
+        <h2 className="mb-4 text-xl font-bold text-white">Recently Added</h2>
         {list.length === 0 ? (
           <div className="rounded border border-dashed border-white/10 p-12 text-center text-sm text-zinc-500">
             {canUpload ? (
@@ -86,15 +100,15 @@ export default async function Home() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
             {list.map((t) => (
               <Link
                 key={t.id}
                 href={`/title/${t.id}`}
-                className="group flex flex-col gap-2"
+                className="group relative shrink-0 transition-transform duration-300 hover:z-10 hover:scale-110"
               >
                 <div
-                  className="aspect-[2/3] w-full overflow-hidden rounded-md bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/5 transition group-hover:ring-white/30"
+                  className="aspect-[2/3] w-36 overflow-hidden rounded bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/5 transition group-hover:ring-white/50 sm:w-44"
                   style={
                     t.poster_url
                       ? {
@@ -104,8 +118,14 @@ export default async function Home() {
                         }
                       : undefined
                   }
-                />
-                <div>
+                >
+                  {!t.poster_url && (
+                    <div className="flex h-full items-center justify-center p-3 text-center text-xs text-zinc-400">
+                      {t.name}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 w-36 sm:w-44">
                   <p className="truncate text-sm font-medium text-zinc-200">
                     {t.name}
                   </p>
