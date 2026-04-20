@@ -44,9 +44,19 @@ export async function findBestMatch(
       cache: "no-store",
     });
   } catch (err) {
-    throw new TmdbError(
-      `TMDB network error: ${err instanceof Error ? err.message : "unknown"}`
-    );
+    const parts: string[] = [];
+    if (err instanceof Error) {
+      parts.push(err.message);
+      const cause = (err as { cause?: unknown }).cause;
+      if (cause instanceof Error) {
+        parts.push(cause.message);
+      } else if (cause) {
+        parts.push(String(cause));
+      }
+    } else {
+      parts.push("unknown error");
+    }
+    throw new TmdbError(`TMDB network error: ${parts.join(" — ")}`);
   }
 
   if (res.status === 401) {
