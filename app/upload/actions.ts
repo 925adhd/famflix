@@ -6,6 +6,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { r2, R2_BUCKET, publicUrlFor } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
 import { findBestMatch } from "@/lib/tmdb";
+import { getStorageUsage, formatBytes } from "@/lib/storage";
 import { revalidatePath } from "next/cache";
 
 type SignedUploadResult =
@@ -15,7 +16,8 @@ type SignedUploadResult =
 export async function createSignedUpload(
   filename: string,
   contentType: string,
-  folder: "uploads" | "thumbnails" = "uploads"
+  folder: "uploads" | "thumbnails" = "uploads",
+  fileSizeBytes?: number
 ): Promise<SignedUploadResult> {
   const supabase = await createClient();
   const {
@@ -31,6 +33,16 @@ export async function createSignedUpload(
 
   if (!profile || (profile.role !== "admin" && profile.role !== "uploader")) {
     return { ok: false, error: "You don't have permission to upload." };
+  }
+
+  if (folder === "uploads" && fileSizeBytes && fileSizeBytes > 0) {
+    const usage = await getStorageUsage();
+    if (fileSizeBytes > usage.remainingBytes) {
+      return {
+        ok: false,
+        error: `Storage cap hit — ${formatBytes(usage.usedBytes)} of ${formatBytes(usage.capBytes)} used. This file is ${formatBytes(fileSizeBytes)}; delete something first.`,
+      };
+    }
   }
 
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -62,6 +74,7 @@ type CreateTitleInput = {
   objectKey: string;
   durationSeconds: number | null;
   thumbnailUrl: string | null;
+  fileSizeBytes: number | null;
 };
 
 export async function createTitle(input: CreateTitleInput) {
@@ -87,6 +100,7 @@ export async function createTitle(input: CreateTitleInput) {
       tmdb_id: match?.tmdbId ?? null,
       r2_object_key: input.objectKey,
       duration_seconds: input.durationSeconds,
+      file_size_bytes: input.fileSizeBytes,
       uploaded_by: user.id,
       status: "ready",
     })

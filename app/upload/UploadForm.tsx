@@ -131,7 +131,12 @@ export function UploadForm() {
 
     setStatus({ phase: "uploading", pct: 0 });
 
-    const signed = await createSignedUpload(file.name, file.type || "video/mp4");
+    const signed = await createSignedUpload(
+      file.name,
+      file.type || "video/mp4",
+      "uploads",
+      file.size
+    );
     if (!signed.ok) {
       setStatus({ phase: "error", message: signed.error });
       return;
@@ -177,6 +182,7 @@ export function UploadForm() {
       objectKey: signed.objectKey,
       durationSeconds: duration,
       thumbnailUrl,
+      fileSizeBytes: file.size,
     });
 
     if (!created.ok) {

@@ -1,6 +1,6 @@
 -- ============================================================================
 -- FAMFLIX — LIVE SUPABASE STATE SNAPSHOT
--- Last updated: 2026-04-19
+-- Last updated: 2026-04-20
 -- Project: ourfamflix.vercel.app
 --
 -- This file is a consolidated snapshot of every schema change applied to the
@@ -46,6 +46,7 @@ create table public.titles (
   tmdb_id int,
   rating text,
   duration_seconds int,
+  file_size_bytes bigint,
   uploaded_by uuid references public.profiles(id),
   r2_object_key text,
   status text not null default 'pending' check (status in ('pending', 'ready', 'failed')),
@@ -64,6 +65,7 @@ create table public.episodes (
   name text,
   overview text,
   duration_seconds int,
+  file_size_bytes bigint,
   r2_object_key text,
   status text not null default 'pending' check (status in ('pending', 'ready', 'failed')),
   created_at timestamptz not null default now(),

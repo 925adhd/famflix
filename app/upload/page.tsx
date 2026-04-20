@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getStorageUsage, formatBytes } from "@/lib/storage";
 import { UploadForm } from "./UploadForm";
 
 export default async function UploadPage() {
@@ -35,6 +36,11 @@ export default async function UploadPage() {
     );
   }
 
+  const usage = await getStorageUsage();
+  const pct = Math.min(100, Math.round(usage.percentUsed));
+  const barColor =
+    pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-amber-400" : "bg-emerald-500";
+
   return (
     <div className="flex flex-1 justify-center px-6 py-12">
       <div className="w-full max-w-xl">
@@ -43,6 +49,25 @@ export default async function UploadPage() {
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">
             ← Back
           </Link>
+        </div>
+
+        <div className="mb-6 rounded border border-white/10 bg-white/5 p-4">
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="text-zinc-300">Library storage</span>
+            <span className="text-zinc-400">
+              {formatBytes(usage.usedBytes)} / {formatBytes(usage.capBytes)} used
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded bg-white/10">
+            <div
+              className={`h-full ${barColor} transition-all`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">
+            {formatBytes(usage.remainingBytes)} remaining. Uploads are blocked
+            above the cap.
+          </p>
         </div>
 
         <p className="mb-6 text-sm text-zinc-400">
