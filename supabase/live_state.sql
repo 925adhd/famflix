@@ -1,6 +1,6 @@
 -- ============================================================================
 -- FAMFLIX — LIVE SUPABASE STATE SNAPSHOT
--- Last updated: 2026-04-20
+-- Last updated: 2026-04-20 (invite-only signup)
 -- Project: ourfamflix.vercel.app
 --
 -- This file is a consolidated snapshot of every schema change applied to the
@@ -92,6 +92,14 @@ create unique index watch_history_profile_episode_idx
   on public.watch_history(profile_id, episode_id)
   where episode_id is not null;
 
+-- Email allowlist for invite-only signup.
+create table public.invited_emails (
+  email text primary key,
+  added_by uuid references public.profiles(id),
+  added_at timestamptz not null default now(),
+  used_at timestamptz
+);
+
 
 -- ==========================================
 -- ROW LEVEL SECURITY
@@ -101,6 +109,7 @@ alter table public.profiles       enable row level security;
 alter table public.titles         enable row level security;
 alter table public.episodes       enable row level security;
 alter table public.watch_history  enable row level security;
+alter table public.invited_emails enable row level security;
 
 
 -- -- profiles --
@@ -186,6 +195,26 @@ create policy "watch history owner-only"
   with check (auth.uid() = profile_id);
 
 
+-- -- invited_emails (admin-only writes; reads go through is_email_invited RPC) --
+create policy "admins manage invites"
+  on public.invited_emails for all
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid()
+      and profiles.role = 'admin'
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid()
+      and profiles.role = 'admin'
+    )
+  );
+
+
 -- ==========================================
 -- FUNCTIONS & TRIGGERS
 -- ==========================================
@@ -210,6 +239,23 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- SECURITY DEFINER helper so the anon-run signup flow can check membership
+-- in invited_emails without exposing the whole allowlist.
+create or replace function public.is_email_invited(check_email text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.invited_emails
+    where lower(email) = lower(check_email)
+  );
+$$;
+
+revoke all on function public.is_email_invited(text) from public;
+grant execute on function public.is_email_invited(text) to anon, authenticated;
 
 
 -- ==========================================

@@ -45,6 +45,14 @@ export default async function Home() {
           FAMFLIX
         </Link>
         <div className="flex items-center gap-3 text-sm text-zinc-300">
+          {profile?.role === "admin" && (
+            <Link
+              href="/admin/invites"
+              className="rounded bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
+            >
+              Invites
+            </Link>
+          )}
           {canUpload && (
             <Link
               href="/upload"
