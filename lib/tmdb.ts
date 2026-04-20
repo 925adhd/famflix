@@ -13,14 +13,30 @@ export type TmdbMatch = {
 export class TmdbError extends Error {}
 
 function authHeaders() {
-  const token = process.env.TMDB_API_KEY;
+  const token = process.env.TMDB_API_KEY?.trim();
   if (!token) {
     throw new TmdbError("TMDB_API_KEY is not set in this environment.");
   }
   return {
     Authorization: `Bearer ${token}`,
     Accept: "application/json",
+    "User-Agent": "Famflix/1.0",
   };
+}
+
+async function fetchWithRetry(url: string, init: RequestInit, retries = 2) {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 250 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 export async function findBestMatch(
@@ -39,7 +55,7 @@ export async function findBestMatch(
 
   let res: Response;
   try {
-    res = await fetch(`${TMDB_BASE}${path}?${params.toString()}`, {
+    res = await fetchWithRetry(`${TMDB_BASE}${path}?${params.toString()}`, {
       headers: authHeaders(),
       cache: "no-store",
     });
