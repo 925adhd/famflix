@@ -14,7 +14,8 @@ type SignedUploadResult =
 
 export async function createSignedUpload(
   filename: string,
-  contentType: string
+  contentType: string,
+  folder: "uploads" | "thumbnails" = "uploads"
 ): Promise<SignedUploadResult> {
   const supabase = await createClient();
   const {
@@ -33,7 +34,7 @@ export async function createSignedUpload(
   }
 
   const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const objectKey = `uploads/${user.id}/${randomUUID()}-${safeName}`;
+  const objectKey = `${folder}/${user.id}/${randomUUID()}-${safeName}`;
 
   const uploadUrl = await getSignedUrl(
     r2,
@@ -60,6 +61,7 @@ type CreateTitleInput = {
   overview: string | null;
   objectKey: string;
   durationSeconds: number | null;
+  thumbnailUrl: string | null;
 };
 
 export async function createTitle(input: CreateTitleInput) {
@@ -80,8 +82,8 @@ export async function createTitle(input: CreateTitleInput) {
       year: input.year ?? match?.year ?? null,
       kind: input.kind,
       overview: input.overview ?? match?.overview ?? null,
-      poster_url: match?.posterUrl ?? null,
-      backdrop_url: match?.backdropUrl ?? null,
+      poster_url: match?.posterUrl ?? input.thumbnailUrl ?? null,
+      backdrop_url: match?.backdropUrl ?? input.thumbnailUrl ?? null,
       tmdb_id: match?.tmdbId ?? null,
       r2_object_key: input.objectKey,
       duration_seconds: input.durationSeconds,

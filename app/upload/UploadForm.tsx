@@ -32,6 +32,61 @@ export function UploadForm() {
     });
   }
 
+  async function extractFrame(file: File): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const v = document.createElement("video");
+      v.preload = "auto";
+      v.muted = true;
+      v.playsInline = true;
+      v.crossOrigin = "anonymous";
+
+      const cleanup = () => URL.revokeObjectURL(url);
+
+      v.onloadedmetadata = () => {
+        const seekTo = Number.isFinite(v.duration)
+          ? Math.min(v.duration * 0.1, 10)
+          : 1;
+        v.currentTime = Math.max(seekTo, 0.1);
+      };
+
+      v.onseeked = () => {
+        try {
+          const max = 720;
+          const ratio = Math.min(max / v.videoWidth, max / v.videoHeight, 1);
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(v.videoWidth * ratio);
+          canvas.height = Math.round(v.videoHeight * ratio);
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            cleanup();
+            resolve(null);
+            return;
+          }
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(
+            (blob) => {
+              cleanup();
+              resolve(blob);
+            },
+            "image/jpeg",
+            0.85
+          );
+        } catch {
+          cleanup();
+          resolve(null);
+        }
+      };
+
+      v.onerror = () => {
+        cleanup();
+        resolve(null);
+      };
+
+      v.src = url;
+    });
+  }
+
   function uploadWithProgress(url: string, file: File): Promise<void> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -95,6 +150,25 @@ export function UploadForm() {
     setStatus({ phase: "saving" });
     const duration = await readDuration(file);
 
+    let thumbnailUrl: string | null = null;
+    const frame = await extractFrame(file).catch(() => null);
+    if (frame) {
+      const thumbName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+      const signedThumb = await createSignedUpload(
+        thumbName,
+        "image/jpeg",
+        "thumbnails"
+      );
+      if (signedThumb.ok) {
+        const res = await fetch(signedThumb.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": "image/jpeg" },
+          body: frame,
+        }).catch(() => null);
+        if (res && res.ok) thumbnailUrl = signedThumb.publicUrl;
+      }
+    }
+
     const created = await createTitle({
       name,
       year: yearStr ? Number(yearStr) : null,
@@ -102,6 +176,7 @@ export function UploadForm() {
       overview: overview || null,
       objectKey: signed.objectKey,
       durationSeconds: duration,
+      thumbnailUrl,
     });
 
     if (!created.ok) {
@@ -109,7 +184,7 @@ export function UploadForm() {
       return;
     }
 
-    router.push(`/title/${created.titleId}`);
+    router.push("/");
     router.refresh();
   }
 
