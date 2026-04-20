@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { publicUrlFor } from "@/lib/r2";
 import { refetchMetadata } from "@/app/upload/actions";
+import { VideoPlayer } from "./VideoPlayer";
 
 export default async function TitlePage({
   params,
@@ -39,6 +39,18 @@ export default async function TitlePage({
   const canEdit =
     !!user &&
     (title.uploaded_by === user.id || profile?.role === "admin");
+
+  const { data: watch } = user
+    ? await supabase
+        .from("watch_history")
+        .select("position_seconds")
+        .eq("profile_id", user.id)
+        .eq("title_id", id)
+        .is("episode_id", null)
+        .maybeSingle()
+    : { data: null };
+
+  const initialPositionSeconds = watch?.position_seconds ?? 0;
 
   const videoUrl = publicUrlFor(title.r2_object_key);
 
@@ -77,12 +89,10 @@ export default async function TitlePage({
         )}
 
         <div className="overflow-hidden rounded-lg bg-black ring-1 ring-white/10">
-          <video
-            controls
-            playsInline
-            preload="metadata"
-            className="aspect-video w-full bg-black"
+          <VideoPlayer
             src={videoUrl}
+            titleId={id}
+            initialPositionSeconds={initialPositionSeconds}
           />
         </div>
 

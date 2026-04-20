@@ -213,25 +213,45 @@ export function UploadForm() {
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-400">Year</span>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={4}
             name="year"
-            min={1900}
-            max={2100}
+            placeholder="YYYY"
             disabled={busy}
             className="rounded border border-white/10 bg-white/5 px-3 py-2 outline-none focus:border-white/30 disabled:opacity-50"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-zinc-400">Kind</span>
-          <select
-            name="kind"
-            disabled={busy}
-            defaultValue="movie"
-            className="rounded border border-white/10 bg-white/5 px-3 py-2 outline-none focus:border-white/30 disabled:opacity-50"
-          >
-            <option value="movie">Movie</option>
-            <option value="show">TV Show</option>
-          </select>
+          <div className="relative">
+            <select
+              name="kind"
+              disabled={busy}
+              defaultValue="movie"
+              style={{ colorScheme: "dark" }}
+              className="w-full appearance-none rounded border border-white/10 bg-white/5 px-3 py-2 pr-9 outline-none focus:border-white/30 disabled:opacity-50"
+            >
+              <option value="movie" className="bg-zinc-900 text-white">
+                Movie
+              </option>
+              <option value="show" className="bg-zinc-900 text-white">
+                TV Show
+              </option>
+            </select>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
         </label>
       </div>
 
@@ -246,7 +266,7 @@ export function UploadForm() {
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-400">Video file (MP4 with H.264 + AAC)</span>
+        <span className="text-zinc-400">Video file (MP4 or WebM)</span>
         <input
           ref={fileInputRef}
           type="file"

@@ -70,12 +70,6 @@ export default async function UploadPage() {
           </p>
         </div>
 
-        <p className="mb-6 text-sm text-zinc-400">
-          Upload an MP4 with H.264 video and AAC audio for best playback across
-          devices. Browsers can&apos;t play .mkv or most exotic codecs — convert
-          with HandBrake first (Fast 1080p30 preset).
-        </p>
-
         <UploadForm />
       </div>
     </div>
