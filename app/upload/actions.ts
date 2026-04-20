@@ -134,13 +134,26 @@ export async function refetchMetadata(titleId: string) {
     existing.uploaded_by === user.id || profile?.role === "admin";
   if (!canEdit) return { ok: false as const, error: "Not allowed." };
 
-  const match = await findBestMatch(
-    existing.name,
-    existing.kind as "movie" | "show",
-    existing.year
-  ).catch(() => null);
+  let match;
+  try {
+    match = await findBestMatch(
+      existing.name,
+      existing.kind as "movie" | "show",
+      existing.year
+    );
+  } catch (err) {
+    return {
+      ok: false as const,
+      error: err instanceof Error ? err.message : "TMDB lookup failed.",
+    };
+  }
 
-  if (!match) return { ok: false as const, error: "No match found on TMDB." };
+  if (!match) {
+    return {
+      ok: false as const,
+      error: `No TMDB result for "${existing.name}"${existing.year ? ` (${existing.year})` : ""}. Try a different year or check the spelling.`,
+    };
+  }
 
   const { error } = await supabase
     .from("titles")

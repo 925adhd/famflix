@@ -1,32 +1,54 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { publicUrlFor } from "@/lib/r2";
 import { refetchMetadata } from "@/app/upload/actions";
 
 export default async function TitlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ meta?: string; message?: string }>;
 }) {
   const { id } = await params;
+  const { meta, message } = await searchParams;
   const supabase = await createClient();
 
   const { data: title } = await supabase
     .from("titles")
     .select(
-      "id, name, year, kind, overview, poster_url, backdrop_url, r2_object_key, duration_seconds, status"
+      "id, name, year, kind, overview, poster_url, backdrop_url, tmdb_id, r2_object_key, duration_seconds, status, uploaded_by"
     )
     .eq("id", id)
     .single();
 
   if (!title || !title.r2_object_key) notFound();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+
+  const canEdit =
+    !!user &&
+    (title.uploaded_by === user.id || profile?.role === "admin");
+
   const videoUrl = publicUrlFor(title.r2_object_key);
 
   async function fetchMetadata() {
     "use server";
-    await refetchMetadata(id);
+    const result = await refetchMetadata(id);
+    if (!result.ok) {
+      redirect(`/title/${id}?meta=failed&message=${encodeURIComponent(result.error)}`);
+    }
+    redirect(`/title/${id}?meta=ok`);
   }
 
   return (
@@ -52,6 +74,17 @@ export default async function TitlePage({
       )}
 
       <section className="mx-auto w-full max-w-5xl px-6 pb-16 pt-4 sm:px-12">
+        {meta === "ok" && (
+          <p className="mb-4 rounded border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+            Metadata refreshed from TMDB.
+          </p>
+        )}
+        {meta === "failed" && (
+          <p className="mb-4 rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+            Couldn&apos;t fetch from TMDB: {message ?? "unknown error"}
+          </p>
+        )}
+
         <div className="overflow-hidden rounded-lg bg-black ring-1 ring-white/10">
           <video
             controls
@@ -84,13 +117,13 @@ export default async function TitlePage({
                     : ""}
                 </p>
               </div>
-              {!title.poster_url && (
+              {canEdit && (
                 <form action={fetchMetadata}>
                   <button
                     type="submit"
                     className="rounded bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20"
                   >
-                    Fetch metadata
+                    {title.tmdb_id ? "Refresh metadata" : "Fetch metadata"}
                   </button>
                 </form>
               )}

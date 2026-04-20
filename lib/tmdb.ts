@@ -10,9 +10,13 @@ export type TmdbMatch = {
   backdropUrl: string | null;
 };
 
+export class TmdbError extends Error {}
+
 function authHeaders() {
   const token = process.env.TMDB_API_KEY;
-  if (!token) throw new Error("TMDB_API_KEY not configured");
+  if (!token) {
+    throw new TmdbError("TMDB_API_KEY is not set in this environment.");
+  }
   return {
     Authorization: `Bearer ${token}`,
     Accept: "application/json",
@@ -24,19 +28,36 @@ export async function findBestMatch(
   kind: "movie" | "show",
   year: number | null
 ): Promise<TmdbMatch | null> {
-  if (!process.env.TMDB_API_KEY) return null;
-
   const path = kind === "movie" ? "/search/movie" : "/search/tv";
   const params = new URLSearchParams({ query: name, include_adult: "false" });
   if (year) {
-    params.set(kind === "movie" ? "primary_release_year" : "first_air_date_year", String(year));
+    params.set(
+      kind === "movie" ? "primary_release_year" : "first_air_date_year",
+      String(year)
+    );
   }
 
-  const res = await fetch(`${TMDB_BASE}${path}?${params.toString()}`, {
-    headers: authHeaders(),
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
+  let res: Response;
+  try {
+    res = await fetch(`${TMDB_BASE}${path}?${params.toString()}`, {
+      headers: authHeaders(),
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new TmdbError(
+      `TMDB network error: ${err instanceof Error ? err.message : "unknown"}`
+    );
+  }
+
+  if (res.status === 401) {
+    throw new TmdbError(
+      "TMDB rejected the API key (401). Make sure you pasted the v4 Read Access Token (starts with eyJ…), not the v3 key."
+    );
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new TmdbError(`TMDB responded ${res.status}: ${body.slice(0, 200)}`);
+  }
 
   const data: { results?: Array<Record<string, unknown>> } = await res.json();
   const first = data.results?.[0];
