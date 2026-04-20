@@ -10,7 +10,19 @@ type FeaturedTitle = {
   kind: string;
   overview: string | null;
   backdrop_url: string | null;
+  tmdb_id: number | null;
 };
+
+function FamflixBadge({ kind }: { kind: string }) {
+  return (
+    <div className="flex items-center gap-2 text-[13px] font-semibold tracking-[0.35em]">
+      <span className="text-3xl font-black leading-none text-accent">F</span>
+      <span className="text-white/90">
+        {kind === "movie" ? "ORIGINAL FILM" : "SERIES"}
+      </span>
+    </div>
+  );
+}
 
 type FallbackSlide = { src: string; position?: string };
 
@@ -64,9 +76,13 @@ export function HeroBillboard({
 
       {current ? (
         <>
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
-            Featured · {current.kind === "movie" ? "Film" : "Series"}
-          </span>
+          {current.tmdb_id ? (
+            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
+              Featured · {current.kind === "movie" ? "Film" : "Series"}
+            </span>
+          ) : (
+            <FamflixBadge kind={current.kind} />
+          )}
           <h1 className="max-w-3xl text-5xl font-black leading-[0.95] tracking-tight drop-shadow-2xl sm:text-7xl">
             {current.name}
           </h1>

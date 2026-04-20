@@ -53,15 +53,6 @@ export default async function TitlePage({
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between px-6 py-4 sm:px-12 lg:px-20">
-        <Link href="/" className="text-lg font-semibold tracking-wide text-accent">
-          FAMFLIX
-        </Link>
-        <Link href="/" className="text-sm text-zinc-400 hover:text-white">
-          ← Library
-        </Link>
-      </header>
-
       {title.backdrop_url && (
         <div
           className="absolute inset-x-0 top-0 -z-10 h-[60vh] opacity-30"

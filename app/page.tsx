@@ -27,7 +27,9 @@ export default async function Home() {
 
   const { data: titles } = await supabase
     .from("titles")
-    .select("id, name, year, kind, overview, poster_url, backdrop_url")
+    .select(
+      "id, name, year, kind, overview, poster_url, backdrop_url, tmdb_id, created_at"
+    )
     .eq("status", "ready")
     .order("created_at", { ascending: false });
 
@@ -36,48 +38,6 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent px-6 py-4 backdrop-blur-[2px] sm:px-12 lg:px-20">
-        <Link
-          href="/"
-          className="text-xl font-black tracking-tight text-accent"
-          style={{ letterSpacing: "-0.02em" }}
-        >
-          FAMFLIX
-        </Link>
-        <div className="flex items-center gap-3 text-sm text-zinc-300">
-          {profile?.role === "admin" && (
-            <Link
-              href="/admin/invites"
-              className="rounded bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
-            >
-              Invites
-            </Link>
-          )}
-          {canUpload && (
-            <Link
-              href="/upload"
-              className="rounded bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
-            >
-              + Upload
-            </Link>
-          )}
-          <span className="hidden sm:inline">
-            Hi,{" "}
-            <span className="text-white">
-              {profile?.display_name ?? user?.email}
-            </span>
-          </span>
-          <form action="/auth/sign-out" method="post">
-            <button
-              type="submit"
-              className="rounded bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-
       <HeroBillboard
         titles={list.map((t) => ({
           id: t.id,
@@ -86,6 +46,7 @@ export default async function Home() {
           kind: t.kind,
           overview: t.overview,
           backdrop_url: t.backdrop_url,
+          tmdb_id: t.tmdb_id,
         }))}
         fallbackSlides={FAMILY_SLIDES}
         canUpload={canUpload}
@@ -109,40 +70,51 @@ export default async function Home() {
           </div>
         ) : (
           <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
-            {list.map((t) => (
-              <Link
-                key={t.id}
-                href={`/title/${t.id}`}
-                className="group relative shrink-0 transition-transform duration-300 hover:z-10 hover:scale-110"
-              >
-                <div
-                  className="aspect-[2/3] w-36 overflow-hidden rounded bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/5 transition group-hover:ring-white/50 sm:w-44"
-                  style={
-                    t.poster_url
-                      ? {
-                          backgroundImage: `url(${t.poster_url})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                        }
-                      : undefined
-                  }
+            {list.map((t) => {
+              const isNew =
+                t.created_at &&
+                Date.now() - new Date(t.created_at).getTime() <
+                  14 * 24 * 60 * 60 * 1000;
+              return (
+                <Link
+                  key={t.id}
+                  href={`/title/${t.id}`}
+                  className="group relative shrink-0 transition-transform duration-300 hover:z-10 hover:scale-110"
                 >
-                  {!t.poster_url && (
-                    <div className="flex h-full items-center justify-center p-3 text-center text-xs text-zinc-400">
+                  <div
+                    className="relative aspect-[2/3] w-36 overflow-hidden rounded bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/5 transition group-hover:ring-white/50 sm:w-44"
+                    style={
+                      t.poster_url
+                        ? {
+                            backgroundImage: `url(${t.poster_url})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }
+                        : undefined
+                    }
+                  >
+                    {!t.poster_url && (
+                      <div className="flex h-full items-center justify-center p-3 text-center text-xs text-zinc-400">
+                        {t.name}
+                      </div>
+                    )}
+                    {isNew && (
+                      <span className="absolute left-2 top-2 rounded bg-accent px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-white shadow">
+                        New
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 w-36 sm:w-44">
+                    <p className="truncate text-sm font-medium text-zinc-200">
                       {t.name}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2 w-36 sm:w-44">
-                  <p className="truncate text-sm font-medium text-zinc-200">
-                    {t.name}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {t.year ?? ""} · {t.kind}
-                  </p>
-                </div>
-              </Link>
-            ))}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {t.year ?? ""} · {t.kind}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
