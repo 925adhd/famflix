@@ -91,6 +91,15 @@ export default async function ProfilePage({
             </button>
           </form>
         </div>
+
+        <form action="/auth/sign-out" method="post" className="mt-8">
+          <button
+            type="submit"
+            className="w-full rounded border border-white/10 bg-white/5 py-3 text-sm font-medium text-zinc-200 hover:bg-white/10"
+          >
+            Sign out
+          </button>
+        </form>
       </div>
     </div>
   );
