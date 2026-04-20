@@ -1,65 +1,123 @@
-import Image from "next/image";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, role")
+    .eq("id", user!.id)
+    .single();
+
+  const { data: titles } = await supabase
+    .from("titles")
+    .select("id, name, year, kind, poster_url")
+    .eq("status", "ready")
+    .order("created_at", { ascending: false });
+
+  const canUpload = profile?.role === "admin" || profile?.role === "uploader";
+  const list = titles ?? [];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="flex flex-1 flex-col">
+      <header className="flex items-center justify-between px-6 py-4 sm:px-12 lg:px-20">
+        <Link href="/" className="text-lg font-semibold tracking-wide text-accent">
+          FAMFLIX
+        </Link>
+        <div className="flex items-center gap-3 text-sm text-zinc-300">
+          {canUpload && (
+            <Link
+              href="/upload"
+              className="rounded bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              + Upload
+            </Link>
+          )}
+          <span>
+            Hi,{" "}
+            <span className="text-white">
+              {profile?.display_name ?? user?.email}
+            </span>
+          </span>
+          <form action="/auth/sign-out" method="post">
+            <button
+              type="submit"
+              className="rounded bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              Sign out
+            </button>
+          </form>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </header>
+
+      <section className="relative flex min-h-[50vh] flex-col items-start justify-end gap-6 overflow-hidden px-6 pb-16 pt-16 sm:px-12 lg:px-20">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-zinc-900 via-black to-zinc-950" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-black to-transparent" />
+        <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+          Your family library.
+        </h1>
+        <p className="max-w-xl text-lg text-zinc-300">
+          {list.length > 0
+            ? `${list.length} title${list.length === 1 ? "" : "s"} ready to watch.`
+            : "Nothing here yet. Upload the first one."}
+        </p>
+      </section>
+
+      <section className="px-6 py-8 sm:px-12 lg:px-20">
+        <h2 className="mb-6 text-xl font-semibold text-zinc-200">
+          Recently Added
+        </h2>
+        {list.length === 0 ? (
+          <div className="rounded border border-dashed border-white/10 p-12 text-center text-sm text-zinc-500">
+            {canUpload ? (
+              <>
+                No titles yet.{" "}
+                <Link href="/upload" className="text-white underline">
+                  Upload one
+                </Link>
+                .
+              </>
+            ) : (
+              "No titles yet. An admin needs to upload something."
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {list.map((t) => (
+              <Link
+                key={t.id}
+                href={`/title/${t.id}`}
+                className="group flex flex-col gap-2"
+              >
+                <div
+                  className="aspect-[2/3] w-full overflow-hidden rounded-md bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/5 transition group-hover:ring-white/30"
+                  style={
+                    t.poster_url
+                      ? {
+                          backgroundImage: `url(${t.poster_url})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : undefined
+                  }
+                />
+                <div>
+                  <p className="truncate text-sm font-medium text-zinc-200">
+                    {t.name}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {t.year ?? ""} · {t.kind}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }

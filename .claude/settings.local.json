@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(npm --version)",
-      "Bash(npx --yes create-next-app@latest . --ts --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --use-npm --yes)"
+      "Bash(npx --yes create-next-app@latest . --ts --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --use-npm --yes)",
+      "Bash(npm run *)",
+      "Bash(cat \"C:\\\\\\\\Users\\\\\\\\BodyK\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\c--Users-BodyK-Desktop-netflixclone\\\\\\\\8e49e18a-ed6d-40b8-9a34-ab6b62512f35\\\\\\\\tasks\\\\\\\\bhwy0g3ex.output\")",
+      "Bash(cat \"C:\\\\\\\\Users\\\\\\\\BodyK\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\c--Users-BodyK-Desktop-netflixclone\\\\\\\\8e49e18a-ed6d-40b8-9a34-ab6b62512f35\\\\\\\\tasks\\\\\\\\bxg4b9bor.output\")",
+      "Bash(taskkill //F //PID 153024)",
+      "Bash(cat \"C:\\\\\\\\Users\\\\\\\\BodyK\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\c--Users-BodyK-Desktop-netflixclone\\\\\\\\8e49e18a-ed6d-40b8-9a34-ab6b62512f35\\\\\\\\tasks\\\\\\\\bxmriv3u2.output\")"
     ]
   }
 }
