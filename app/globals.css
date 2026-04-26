@@ -19,3 +19,177 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* ==== Famflix intro animation (Netflix-style brush + lights, "F") ====
+   Direct port of the codepen netflixintro structure, restricted to the
+   F variant (helper-1: stem, helper-2: top bar, helper-3: middle bar). */
+
+@keyframes nf-fade {
+  0%, 90% { opacity: 1; }
+  100%    { opacity: 0; visibility: hidden; }
+}
+
+@keyframes nf-zoom-in {
+  0%   { transform: scale(1); }
+  100% { transform: scale(15); }
+}
+
+@keyframes nf-brush-moving {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes nf-fading-out {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes nf-fading-lumieres-box {
+  0%   { background-color: rgba(228, 9, 19, 0.5); }
+  100% { background-color: rgba(228, 9, 19, 0); }
+}
+
+@keyframes nf-lumieres-moving-left {
+  0%   { transform: translate(0); }
+  40%  { transform: translate(10px) scaleX(1); }
+  50%  { transform: translate(60px); }
+  100% { transform: translate(120px) scaleX(3); }
+}
+
+@keyframes nf-lumieres-moving-right {
+  0%   { transform: translate(0); }
+  40%  { transform: translate(-10px) scaleX(1); }
+  50%  { transform: translate(-60px); }
+  100% { transform: translate(-120px) scaleX(3); }
+}
+
+@keyframes nf-showing-lumieres {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.netflix-intro {
+  display: block;
+  position: relative;
+  width: 300px;
+  height: 300px;
+  overflow: hidden;
+  animation: nf-zoom-in 3.5s ease-in 0.5s forwards;
+  transform-origin: 30% center;
+}
+
+.netflix-intro::before {
+  content: "";
+  position: absolute;
+  display: block;
+  background-color: #000;
+  width: 150%;
+  height: 30%;
+  left: -25%;
+  bottom: -27%;
+  border-radius: 50%;
+  z-index: 5;
+  transform-origin: left center;
+}
+
+.netflix-intro .helper-1,
+.netflix-intro .helper-2,
+.netflix-intro .helper-3 {
+  position: absolute;
+}
+
+.netflix-intro .helper-1 {
+  width: 19.5%;
+  height: 100%;
+  background-color: rgba(228, 9, 19, 0.5);
+  left: 22%;
+  top: 0;
+  transform: rotate(180deg);
+  animation: nf-fading-lumieres-box 2s 0.6s forwards;
+}
+
+.netflix-intro .helper-1 .effect-brush {
+  animation: nf-brush-moving 2.5s 1.2s forwards;
+}
+
+.netflix-intro .helper-1 .effect-brush > span {
+  bottom: 0;
+  height: 40%;
+}
+
+.netflix-intro .helper-2 {
+  width: 17.5%;
+  height: 50%;
+  left: 38%;
+  top: -49px;
+  transform: rotate(270deg);
+  overflow: hidden;
+}
+
+.netflix-intro .helper-2 .effect-brush {
+  animation: nf-brush-moving 2s 0.7s forwards;
+}
+
+.netflix-intro .helper-3 {
+  width: 17%;
+  height: 39%;
+  left: 33%;
+  top: 29%;
+  transform: rotate(-90deg);
+  box-shadow: 0px 0px 35px -12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  animation: nf-fading-out 2s 1s forwards;
+}
+
+.netflix-intro .helper-3 .effect-brush {
+  animation: nf-brush-moving 2s 0.5s forwards;
+}
+
+.netflix-intro .effect-brush {
+  position: absolute;
+  width: 100%;
+  height: 300%;
+  top: 0;
+  overflow: hidden;
+}
+
+.netflix-intro .effect-brush::before {
+  display: block;
+  content: "";
+  position: absolute;
+  background-color: #e40913;
+  width: 100%;
+  height: 70%;
+  box-shadow: 0px 0px 29px 24px #e40913;
+}
+
+.netflix-intro .effect-brush > span {
+  display: block;
+  position: absolute;
+  bottom: 10%;
+  height: 30%;
+}
+
+.netflix-intro .effect-lumieres {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  animation: nf-showing-lumieres 2s 1.6s forwards;
+  pointer-events: none;
+}
+
+.netflix-intro .effect-lumieres > span {
+  position: absolute;
+  display: block;
+  height: 100%;
+  box-shadow: 0px 0px 10px 0px rgba(228, 9, 19, 0.75);
+}
+
+.netflix-intro .effect-lumieres > span > span {
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0px 0px 10px 0px rgba(228, 9, 19, 0.75);
+}

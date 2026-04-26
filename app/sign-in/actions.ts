@@ -16,5 +16,5 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect("/?welcome=1");
 }

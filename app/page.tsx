@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { HeroBillboard } from "./HeroBillboard";
+import { IntroAnimation } from "./components/IntroAnimation";
 
 const FAMILY_SLIDES = [
   { src: "/family-2.jpg", position: "center 60%" },
@@ -63,6 +65,9 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col">
+      <Suspense fallback={null}>
+        <IntroAnimation />
+      </Suspense>
       <HeroBillboard
         titles={list.map((t) => ({
           id: t.id,
