@@ -122,9 +122,28 @@ export default async function TitlePage({
                 <form action={fetchMetadata}>
                   <button
                     type="submit"
-                    className="rounded bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20"
+                    aria-label={
+                      title.tmdb_id ? "Refresh metadata" : "Fetch metadata"
+                    }
+                    title={
+                      title.tmdb_id ? "Refresh metadata" : "Fetch metadata"
+                    }
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
                   >
-                    {title.tmdb_id ? "Refresh metadata" : "Fetch metadata"}
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-4 w-4"
+                    >
+                      <polyline points="23 4 23 10 17 10" />
+                      <polyline points="1 20 1 14 7 14" />
+                      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" />
+                      <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14" />
+                    </svg>
                   </button>
                 </form>
               )}
