@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { useSearchParams } from "next/navigation";
 
 const DURATION_MS = 4500;
 
@@ -132,14 +131,13 @@ function Lumieres() {
   );
 }
 
-export function IntroAnimation() {
-  const searchParams = useSearchParams();
-  const [show, setShow] = useState(false);
+export function IntroAnimation({ play }: { play: boolean }) {
+  const [show, setShow] = useState(play);
 
   useEffect(() => {
-    if (searchParams.get("welcome") !== "1") return;
-    setShow(true);
+    if (!play) return;
 
+    // Strip ?welcome=1 so a refresh during/after the animation doesn't replay it.
     const url = new URL(window.location.href);
     url.searchParams.delete("welcome");
     window.history.replaceState({}, "", url.toString());

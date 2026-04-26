@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { HeroBillboard } from "./HeroBillboard";
 import { IntroAnimation } from "./components/IntroAnimation";
@@ -15,7 +14,14 @@ const FAMILY_SLIDES = [
   { src: "/family-8.jpg", position: "center" },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
+  const { welcome } = await searchParams;
+  const playIntro = welcome === "1";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -65,9 +71,7 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <Suspense fallback={null}>
-        <IntroAnimation />
-      </Suspense>
+      <IntroAnimation play={playIntro} />
       <HeroBillboard
         titles={list.map((t) => ({
           id: t.id,
