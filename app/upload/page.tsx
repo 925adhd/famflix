@@ -42,31 +42,30 @@ export default async function UploadPage() {
     pct >= 90 ? "bg-red-500" : pct >= 70 ? "bg-amber-400" : "bg-emerald-500";
 
   return (
-    <div className="flex flex-1 justify-center px-6 py-12">
+    <div className="flex flex-1 justify-center px-6 py-4 sm:py-12">
       <div className="w-full max-w-xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Upload a title</h1>
+        <div className="mb-3 flex items-center justify-between sm:mb-6">
+          <h1 className="text-xl font-semibold sm:text-2xl">Upload a title</h1>
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">
             ← Back
           </Link>
         </div>
 
-        <div className="mb-6 rounded border border-white/10 bg-white/5 p-4">
-          <div className="mb-2 flex items-center justify-between text-sm">
+        <div className="mb-3 rounded border border-white/10 bg-white/5 p-3 sm:mb-6 sm:p-4">
+          <div className="mb-2 flex items-center justify-between text-xs sm:text-sm">
             <span className="text-zinc-300">Library storage</span>
             <span className="text-zinc-400">
-              {formatBytes(usage.usedBytes)} / {formatBytes(usage.capBytes)} used
+              {formatBytes(usage.usedBytes)} / {formatBytes(usage.capBytes)}
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded bg-white/10">
+          <div className="h-1.5 overflow-hidden rounded bg-white/10 sm:h-2">
             <div
               className={`h-full ${barColor} transition-all`}
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="mt-2 text-xs text-zinc-500">
-            {formatBytes(usage.remainingBytes)} remaining. Uploads are blocked
-            above the cap.
+          <p className="mt-1.5 text-[11px] text-zinc-500 sm:mt-2 sm:text-xs">
+            {formatBytes(usage.remainingBytes)} remaining
           </p>
         </div>
 

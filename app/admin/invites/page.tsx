@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addInvite, removeInvite } from "./actions";
+import { InvitesList } from "./InvitesList";
 
 export default async function InvitesPage({
   searchParams,
@@ -90,37 +91,7 @@ export default async function InvitesPage({
           </button>
         </form>
 
-        <div className="rounded border border-white/10 divide-y divide-white/5">
-          {(invites ?? []).length === 0 ? (
-            <p className="p-4 text-center text-sm text-zinc-500">
-              No invites yet. Add an email above.
-            </p>
-          ) : (
-            (invites ?? []).map((inv) => (
-              <div
-                key={inv.email}
-                className="flex items-center justify-between p-3 text-sm"
-              >
-                <div>
-                  <p className="font-medium text-zinc-100">{inv.email}</p>
-                  <p className="text-xs text-zinc-500">
-                    {inv.used_at ? "Signed up" : "Pending"} ·{" "}
-                    {new Date(inv.added_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <form action={removeInvite}>
-                  <input type="hidden" name="email" value={inv.email} />
-                  <button
-                    type="submit"
-                    className="rounded bg-white/5 px-3 py-1 text-xs text-zinc-300 hover:bg-red-500/20 hover:text-red-300"
-                  >
-                    Remove
-                  </button>
-                </form>
-              </div>
-            ))
-          )}
-        </div>
+        <InvitesList invites={invites ?? []} removeInvite={removeInvite} />
       </div>
     </div>
   );

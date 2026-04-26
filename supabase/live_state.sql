@@ -216,7 +216,9 @@ create policy "admins manage invites"
 -- FUNCTIONS & TRIGGERS
 -- ==========================================
 
--- Auto-create a public.profiles row every time auth.users gains a row.
+-- Auto-create a public.profiles row every time auth.users gains a row,
+-- and mark the matching invited_emails row as used so the admin invites
+-- page can show "Signed up" vs "Pending".
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -229,6 +231,11 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1))
   );
+
+  update public.invited_emails
+    set used_at = coalesce(used_at, now())
+    where lower(email) = lower(new.email);
+
   return new;
 end;
 $$;
@@ -271,7 +278,16 @@ grant execute on function public.is_email_invited(text) to anon, authenticated;
 --   select email from auth.users
 --   on conflict do nothing;
 --
--- Neither is replayable; only included for audit context.
+-- When handle_new_user was extended to write used_at, existing rows were
+-- back-filled so they show "Signed up" instead of "Pending":
+--
+--   update public.invited_emails ie
+--   set used_at = u.created_at
+--   from auth.users u
+--   where lower(ie.email) = lower(u.email)
+--     and ie.used_at is null;
+--
+-- None of these are replayable; only included for audit context.
 
 
 -- ==========================================

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type FeaturedTitle = {
   id: string;
@@ -47,16 +47,44 @@ export function HeroBillboard({
 
   useEffect(() => {
     if (slides.length <= 1) return;
-    const id = setInterval(() => {
+    const id = setTimeout(() => {
       setIndex((i) => (i + 1) % slides.length);
     }, INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [slides.length]);
+    return () => clearTimeout(id);
+  }, [slides.length, index]);
+
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const startX = touchStartX.current;
+    const startY = touchStartY.current;
+    touchStartX.current = null;
+    touchStartY.current = null;
+    if (startX === null || startY === null || slides.length <= 1) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    setIndex((i) =>
+      dx < 0
+        ? (i + 1) % slides.length
+        : (i - 1 + slides.length) % slides.length
+    );
+  };
 
   const current = hasTitles ? cycleTitles[index % cycleTitles.length] : null;
 
   return (
-    <section className="relative flex min-h-[85vh] flex-col items-start justify-end gap-4 overflow-hidden px-6 pb-24 pt-20 sm:px-12 sm:pb-32 lg:px-20">
+    <section
+      className="relative flex min-h-[85vh] flex-col items-start justify-end gap-4 overflow-hidden px-6 pb-24 pt-20 sm:px-12 sm:pb-32 lg:px-20"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       <div className="absolute inset-0 -z-20 overflow-hidden bg-black">
         {slides.map((slide, i) => (
           <div

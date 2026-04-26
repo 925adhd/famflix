@@ -58,9 +58,9 @@ export function AvatarUploader({ currentUrl }: { currentUrl: string | null }) {
   }
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex items-center gap-4 sm:gap-5">
       <div
-        className="h-24 w-24 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 ring-2 ring-white/10"
+        className="h-20 w-20 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 ring-2 ring-white/10 sm:h-24 sm:w-24"
         style={
           preview
             ? {
@@ -80,7 +80,6 @@ export function AvatarUploader({ currentUrl }: { currentUrl: string | null }) {
         >
           {busy ? "Uploading…" : preview ? "Change avatar" : "Upload avatar"}
         </button>
-        <p className="text-xs text-zinc-500">JPG, PNG, or WebP · max 5 MB</p>
         {error && <p className="text-xs text-red-300">{error}</p>}
         <input
           ref={fileInputRef}
