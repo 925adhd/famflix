@@ -17,10 +17,11 @@ const FAMILY_SLIDES = [
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ welcome?: string }>;
+  searchParams: Promise<{ welcome?: string; demo?: string }>;
 }) {
-  const { welcome } = await searchParams;
+  const { welcome, demo } = await searchParams;
   const playIntro = welcome === "1";
+  const demoMode = demo === "1";
 
   const supabase = await createClient();
   const {
@@ -133,7 +134,7 @@ export default async function Home({
     <main className="flex flex-1 flex-col">
       <IntroAnimation play={playIntro} />
       <HeroBillboard
-        titles={list.map((t) => ({
+        titles={(demoMode ? famflixOriginals : list).map((t) => ({
           id: t.id,
           name: t.name,
           year: t.year,
@@ -146,7 +147,7 @@ export default async function Home({
         canUpload={canUpload}
       />
 
-      {continueWatching.length > 0 && (
+      {!demoMode && continueWatching.length > 0 && (
         <section className="-mt-16 px-6 pb-4 sm:px-12 sm:-mt-20 lg:px-20">
           <h2 className="mb-4 text-xl font-bold text-white">
             Continue Watching
@@ -196,33 +197,37 @@ export default async function Home({
         </section>
       )}
 
-      <section
-        className={`${continueWatching.length > 0 ? "" : "-mt-16 sm:-mt-20"} px-6 pb-4 sm:px-12 lg:px-20`}
-      >
-        <h2 className="mb-4 text-xl font-bold text-white">Recently Added</h2>
-        {list.length === 0 ? (
-          <div className="rounded border border-dashed border-white/10 p-12 text-center text-sm text-zinc-500">
-            {canUpload ? (
-              <>
-                No titles yet.{" "}
-                <Link href="/upload" className="text-white underline">
-                  Upload one
-                </Link>
-                .
-              </>
-            ) : (
-              "No titles yet. An admin needs to upload something."
-            )}
-          </div>
-        ) : (
-          <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
-            {list.map(renderCard)}
-          </div>
-        )}
-      </section>
+      {!demoMode && (
+        <section
+          className={`${continueWatching.length > 0 ? "" : "-mt-16 sm:-mt-20"} px-6 pb-4 sm:px-12 lg:px-20`}
+        >
+          <h2 className="mb-4 text-xl font-bold text-white">Recently Added</h2>
+          {list.length === 0 ? (
+            <div className="rounded border border-dashed border-white/10 p-12 text-center text-sm text-zinc-500">
+              {canUpload ? (
+                <>
+                  No titles yet.{" "}
+                  <Link href="/upload" className="text-white underline">
+                    Upload one
+                  </Link>
+                  .
+                </>
+              ) : (
+                "No titles yet. An admin needs to upload something."
+              )}
+            </div>
+          ) : (
+            <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
+              {list.map(renderCard)}
+            </div>
+          )}
+        </section>
+      )}
 
       {famflixOriginals.length > 0 && (
-        <section className="px-6 pb-4 sm:px-12 lg:px-20">
+        <section
+          className={`${demoMode ? "-mt-16 sm:-mt-20 " : ""}px-6 pb-4 sm:px-12 lg:px-20`}
+        >
           <h2 className="mb-4 text-xl font-bold text-white">
             <span className="text-accent">Famflix</span> Originals
           </h2>
@@ -232,14 +237,15 @@ export default async function Home({
         </section>
       )}
 
-      {genreRows.map(([genre, items]) => (
-        <section key={genre} className="px-6 pb-4 sm:px-12 lg:px-20">
-          <h2 className="mb-4 text-xl font-bold text-white">{genre}</h2>
-          <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
-            {items.map(renderCard)}
-          </div>
-        </section>
-      ))}
+      {!demoMode &&
+        genreRows.map(([genre, items]) => (
+          <section key={genre} className="px-6 pb-4 sm:px-12 lg:px-20">
+            <h2 className="mb-4 text-xl font-bold text-white">{genre}</h2>
+            <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
+              {items.map(renderCard)}
+            </div>
+          </section>
+        ))}
 
       <div className="pb-12" />
     </main>
