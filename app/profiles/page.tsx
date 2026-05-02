@@ -10,7 +10,15 @@ type ProfileCard = {
   avatar_url: string | null;
 };
 
-export default async function ProfilesPage() {
+export default async function ProfilesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo?: string }>;
+}) {
+  const { demo } = await searchParams;
+  const demoMode = demo === "1";
+  const homeHref = demoMode ? "/?welcome=1&demo=1" : "/?welcome=1";
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -78,7 +86,7 @@ export default async function ProfilesPage() {
               <li key={p.id}>
                 {isMe ? (
                   <Link
-                    href="/?welcome=1"
+                    href={homeHref}
                     className="group flex flex-col items-center gap-2 sm:gap-3"
                   >
                     {tile}
