@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,8 +21,15 @@ export async function MobileHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/60 to-transparent px-4 py-3 md:hidden">
-      <Link href="/" className="text-lg font-black tracking-tight text-accent">
-        FAMFLIX
+      <Link href="/" aria-label="Famflix">
+        <Image
+          src="/loogo.png"
+          alt="Famflix"
+          width={238}
+          height={85}
+          priority
+          className="h-7 w-auto"
+        />
       </Link>
       <Link
         href="/profile"
