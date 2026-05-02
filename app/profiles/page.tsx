@@ -97,7 +97,7 @@ export default async function ProfilesPage() {
         </ul>
 
         <Link
-          href="/profile"
+          href="/profile?from=picker"
           className="mt-12 rounded border border-zinc-600 px-5 py-2 text-sm tracking-wide text-zinc-400 transition hover:border-white hover:text-white sm:mt-16 sm:px-7 sm:py-2.5 sm:text-base"
         >
           Manage Profile

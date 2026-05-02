@@ -13,9 +13,11 @@ import { EmailField } from "./EmailField";
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; from?: string }>;
 }) {
-  const { saved, error } = await searchParams;
+  const { saved, error, from } = await searchParams;
+  const fromPicker = from === "picker";
+  const backHref = fromPicker ? "/profiles" : "/";
   const supabase = await createClient();
   const {
     data: { user },
@@ -33,7 +35,7 @@ export default async function ProfilePage({
       <div className="w-full max-w-lg">
         <div className="mb-3 flex items-center justify-between sm:mb-6">
           <h1 className="text-xl font-semibold sm:text-2xl">Your profile</h1>
-          <Link href="/" className="text-sm text-zinc-400 hover:text-white">
+          <Link href={backHref} className="text-sm text-zinc-400 hover:text-white">
             ← Back
           </Link>
         </div>
@@ -70,6 +72,7 @@ export default async function ProfilePage({
             Details
           </h2>
           <form action={updateDisplayName} className="flex flex-col gap-2.5 sm:gap-4">
+            {fromPicker && <input type="hidden" name="from" value="picker" />}
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-zinc-400">Display name</span>
               <input

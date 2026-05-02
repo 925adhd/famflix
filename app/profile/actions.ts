@@ -16,24 +16,27 @@ function back(params: Record<string, string>): never {
 
 export async function updateDisplayName(formData: FormData) {
   const name = String(formData.get("display_name") ?? "").trim();
-  if (!name) back({ error: "Display name can't be empty." });
+  const from = String(formData.get("from") ?? "");
+  const carry: Record<string, string> = from ? { from } : {};
+
+  if (!name) back({ ...carry, error: "Display name can't be empty." });
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) back({ error: "Not signed in." });
+  if (!user) back({ ...carry, error: "Not signed in." });
 
   const { error } = await supabase
     .from("profiles")
     .update({ display_name: name })
     .eq("id", user.id);
 
-  if (error) back({ error: error.message });
+  if (error) back({ ...carry, error: error.message });
 
   revalidatePath("/profile");
   revalidatePath("/", "layout");
-  back({ saved: "1" });
+  back({ ...carry, saved: "1" });
 }
 
 type SignedAvatarResult =
