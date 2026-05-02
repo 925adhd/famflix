@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { avatarUrlFor } from "@/lib/avatar";
 import { NavItem } from "./NavItem";
 
 const iconProps = {
@@ -27,9 +28,7 @@ export async function Sidebar() {
 
   const isAdmin = profile?.role === "admin";
   const canUpload = isAdmin || profile?.role === "uploader";
-  const initial = (profile?.display_name ?? user.email ?? "?")
-    .charAt(0)
-    .toUpperCase();
+  const avatarSrc = avatarUrlFor({ id: user.id, avatar_url: profile?.avatar_url });
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center gap-5 border-r border-white/5 bg-black/80 py-6 backdrop-blur md:flex">
@@ -92,19 +91,14 @@ export async function Sidebar() {
         href="/profile"
         title="Profile"
         aria-label="Profile"
-        className="mb-2 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 text-sm font-semibold text-white ring-1 ring-white/10 hover:ring-white/40"
-        style={
-          profile?.avatar_url
-            ? {
-                backgroundImage: `url(${profile.avatar_url})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : undefined
-        }
-      >
-        {!profile?.avatar_url && initial}
-      </Link>
+        className="mb-2 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10 hover:ring-white/40"
+        style={{
+          backgroundImage: `url(${avatarSrc})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+
 
       <form action="/auth/sign-out" method="post">
         <button

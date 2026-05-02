@@ -7,6 +7,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { r2, R2_BUCKET, publicUrlFor } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_AVATAR_SEEDS, defaultAvatarValue } from "@/lib/avatar";
 
 function back(params: Record<string, string>): never {
   const qs = new URLSearchParams(params).toString();
@@ -89,4 +90,11 @@ export async function setAvatarUrl(avatarUrl: string) {
   revalidatePath("/profile");
   revalidatePath("/", "layout");
   return { ok: true as const };
+}
+
+export async function setDefaultAvatar(seed: string) {
+  if (!DEFAULT_AVATAR_SEEDS.includes(seed as (typeof DEFAULT_AVATAR_SEEDS)[number])) {
+    return { ok: false as const, error: "Unknown avatar." };
+  }
+  return setAvatarUrl(defaultAvatarValue(seed));
 }

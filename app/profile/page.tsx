@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  DEFAULT_AVATAR_SEEDS,
+  avatarUrlFor,
+  defaultAvatarUrl,
+} from "@/lib/avatar";
 import { updateDisplayName } from "./actions";
 import { AvatarUploader } from "./AvatarUploader";
 import { EmailField } from "./EmailField";
@@ -48,7 +53,16 @@ export default async function ProfilePage({
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 sm:mb-4 sm:text-sm">
             Avatar
           </h2>
-          <AvatarUploader currentUrl={profile?.avatar_url ?? null} />
+          <AvatarUploader
+            currentPreviewUrl={avatarUrlFor({
+              id: user.id,
+              avatar_url: profile?.avatar_url ?? null,
+            })}
+            defaultChoices={DEFAULT_AVATAR_SEEDS.map((seed) => ({
+              seed,
+              url: defaultAvatarUrl(seed),
+            }))}
+          />
         </div>
 
         <div className="rounded border border-white/10 bg-white/5 p-3 sm:p-6">
