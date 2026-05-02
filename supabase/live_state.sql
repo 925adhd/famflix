@@ -1,6 +1,6 @@
 -- ============================================================================
 -- FAMFLIX — LIVE SUPABASE STATE SNAPSHOT
--- Last updated: 2026-04-20 (invite-only signup)
+-- Last updated: 2026-05-01 (titles.genres for genre-row layout)
 -- Project: ourfamflix.vercel.app
 --
 -- This file is a consolidated snapshot of every schema change applied to the
@@ -47,11 +47,13 @@ create table public.titles (
   uploaded_by uuid references public.profiles(id),
   r2_object_key text,
   status text not null default 'pending' check (status in ('pending', 'ready', 'failed')),
+  genres text[],
   created_at timestamptz not null default now()
 );
 
 create index titles_kind_idx on public.titles(kind);
 create index titles_status_idx on public.titles(status);
+create index titles_genres_idx on public.titles using gin (genres);
 
 -- Individual episodes for TV shows.
 create table public.episodes (

@@ -98,6 +98,7 @@ export async function createTitle(input: CreateTitleInput) {
       poster_url: match?.posterUrl ?? input.thumbnailUrl ?? null,
       backdrop_url: match?.backdropUrl ?? input.thumbnailUrl ?? null,
       tmdb_id: match?.tmdbId ?? null,
+      genres: match?.genres?.length ? match.genres : null,
       r2_object_key: input.objectKey,
       duration_seconds: input.durationSeconds,
       file_size_bytes: input.fileSizeBytes,
@@ -162,6 +163,7 @@ export async function refetchMetadata(titleId: string) {
       poster_url: match.posterUrl,
       backdrop_url: match.backdropUrl,
       tmdb_id: match.tmdbId,
+      genres: match.genres.length ? match.genres : null,
       year: existing.year ?? match.year,
     })
     .eq("id", titleId);

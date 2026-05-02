@@ -1,6 +1,58 @@
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMAGE_BASE = "https://image.tmdb.org/t/p";
 
+// Stable TMDB genre id -> name maps. Sourced from /genre/movie/list and
+// /genre/tv/list. Embedded so we don't need an extra round-trip per upload.
+const MOVIE_GENRES: Record<number, string> = {
+  28: "Action",
+  12: "Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  14: "Fantasy",
+  36: "History",
+  27: "Horror",
+  10402: "Music",
+  9648: "Mystery",
+  10749: "Romance",
+  878: "Science Fiction",
+  10770: "TV Movie",
+  53: "Thriller",
+  10752: "War",
+  37: "Western",
+};
+
+const TV_GENRES: Record<number, string> = {
+  10759: "Action & Adventure",
+  16: "Animation",
+  35: "Comedy",
+  80: "Crime",
+  99: "Documentary",
+  18: "Drama",
+  10751: "Family",
+  10762: "Kids",
+  9648: "Mystery",
+  10763: "News",
+  10764: "Reality",
+  10765: "Sci-Fi & Fantasy",
+  10766: "Soap",
+  10767: "Talk",
+  10768: "War & Politics",
+  37: "Western",
+};
+
+function mapGenreIds(ids: unknown, kind: "movie" | "show"): string[] {
+  if (!Array.isArray(ids)) return [];
+  const map = kind === "movie" ? MOVIE_GENRES : TV_GENRES;
+  const names = ids
+    .map((id) => (typeof id === "number" ? map[id] : undefined))
+    .filter((n): n is string => Boolean(n));
+  return Array.from(new Set(names));
+}
+
 export type TmdbMatch = {
   tmdbId: number;
   name: string;
@@ -8,6 +60,7 @@ export type TmdbMatch = {
   overview: string | null;
   posterUrl: string | null;
   backdropUrl: string | null;
+  genres: string[];
 };
 
 export class TmdbError extends Error {}
@@ -107,5 +160,29 @@ export async function findBestMatch(
     overview: (first.overview as string | null) ?? null,
     posterUrl: poster ? `${IMAGE_BASE}/w500${poster}` : null,
     backdropUrl: backdrop ? `${IMAGE_BASE}/w1280${backdrop}` : null,
+    genres: mapGenreIds(first.genre_ids, kind),
   };
+}
+
+// Fetches the full title detail so we can pull canonical genre names.
+// Used by the backfill script for already-stored tmdb_ids.
+export async function fetchGenresByTmdbId(
+  tmdbId: number,
+  kind: "movie" | "show"
+): Promise<string[]> {
+  const path = kind === "movie" ? `/movie/${tmdbId}` : `/tv/${tmdbId}`;
+  const res = await fetchWithRetry(`${TMDB_BASE}${path}`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new TmdbError(`TMDB ${path} responded ${res.status}`);
+  }
+
+  const data: { genres?: Array<{ name?: string }> } = await res.json();
+  const names = (data.genres ?? [])
+    .map((g) => g.name)
+    .filter((n): n is string => Boolean(n));
+  return Array.from(new Set(names));
 }

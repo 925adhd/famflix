@@ -10,7 +10,13 @@ export default async function SignUpPage({
   const { error, success } = await searchParams;
 
   return (
-    <div className="flex flex-1 items-center justify-center px-6 py-16">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-16">
+      <Link
+        href="/"
+        className="mb-6 text-4xl font-black tracking-tight text-accent sm:text-5xl"
+      >
+        FAMFLIX
+      </Link>
       <div className="w-full max-w-sm rounded-lg border border-white/10 bg-black/60 p-8 backdrop-blur">
         <h1 className="mb-6 text-2xl font-semibold">Create account</h1>
 

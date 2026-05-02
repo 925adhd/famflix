@@ -27,6 +27,7 @@ function FamflixBadge({ kind }: { kind: string }) {
 type FallbackSlide = { src: string; position?: string };
 
 const INTERVAL_MS = 6000;
+const MAX_SPOTLIGHT = 5;
 
 export function HeroBillboard({
   titles,
@@ -37,7 +38,9 @@ export function HeroBillboard({
   fallbackSlides: FallbackSlide[];
   canUpload: boolean;
 }) {
-  const cycleTitles = titles.filter((t) => t.backdrop_url);
+  const cycleTitles = titles
+    .filter((t) => t.backdrop_url)
+    .slice(0, MAX_SPOTLIGHT);
   const hasTitles = cycleTitles.length > 0;
   const slides: FallbackSlide[] = hasTitles
     ? cycleTitles.map((t) => ({ src: t.backdrop_url! }))
