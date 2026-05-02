@@ -224,7 +224,7 @@ export default async function Home({
       {famflixOriginals.length > 0 && (
         <section className="px-6 pb-4 sm:px-12 lg:px-20">
           <h2 className="mb-4 text-xl font-bold text-white">
-            Famflix Originals
+            <span className="text-accent">Famflix</span> Originals
           </h2>
           <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
             {famflixOriginals.map(renderCard)}
