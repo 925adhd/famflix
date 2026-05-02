@@ -69,11 +69,12 @@ export default async function ProfilesPage({
             const tile = (
               <>
                 <div
-                  className="h-28 w-28 overflow-hidden rounded-md bg-zinc-800 ring-2 ring-transparent transition group-hover:ring-white sm:h-40 sm:w-40"
+                  className="h-28 w-28 overflow-hidden rounded-md bg-zinc-800 ring-2 ring-transparent transition will-change-transform group-hover:ring-white sm:h-40 sm:w-40"
                   style={{
                     backgroundImage: `url(${avatarUrlFor(p)})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
+                    transform: "translateZ(0)",
                   }}
                 />
                 <span className="text-sm text-zinc-400 transition group-hover:text-white sm:text-base">
