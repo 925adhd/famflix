@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -9,14 +8,21 @@ import {
 import { updateDisplayName } from "./actions";
 import { AvatarUploader } from "./AvatarUploader";
 import { EmailField } from "./EmailField";
+import { DemoLink } from "@/app/components/DemoLink";
 
 export default async function ProfilePage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string; error?: string; from?: string }>;
+  searchParams: Promise<{
+    saved?: string;
+    error?: string;
+    from?: string;
+    demo?: string;
+  }>;
 }) {
-  const { saved, error, from } = await searchParams;
+  const { saved, error, from, demo } = await searchParams;
   const fromPicker = from === "picker";
+  const demoMode = demo === "1";
   const backHref = fromPicker ? "/profiles" : "/";
   const supabase = await createClient();
   const {
@@ -35,9 +41,9 @@ export default async function ProfilePage({
       <div className="w-full max-w-lg">
         <div className="mb-3 flex items-center justify-between sm:mb-6">
           <h1 className="text-xl font-semibold sm:text-2xl">Your profile</h1>
-          <Link href={backHref} className="text-sm text-zinc-400 hover:text-white">
+          <DemoLink href={backHref} className="text-sm text-zinc-400 hover:text-white">
             ← Back
-          </Link>
+          </DemoLink>
         </div>
 
         {saved && (
@@ -73,6 +79,7 @@ export default async function ProfilePage({
           </h2>
           <form action={updateDisplayName} className="flex flex-col gap-2.5 sm:gap-4">
             {fromPicker && <input type="hidden" name="from" value="picker" />}
+            {demoMode && <input type="hidden" name="demo" value="1" />}
             <label className="flex flex-col gap-1 text-sm">
               <span className="text-zinc-400">Display name</span>
               <input

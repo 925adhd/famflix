@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useDemoHref } from "./demoHref";
 
 export function NavItem({
   href,
@@ -14,12 +15,13 @@ export function NavItem({
   label: string;
 }) {
   const pathname = usePathname();
+  const withDemo = useDemoHref();
   const active =
     pathname === href || (href !== "/" && pathname.startsWith(href));
 
   return (
     <Link
-      href={href}
+      href={withDemo(href)}
       title={label}
       aria-label={label}
       className={`group relative flex h-10 w-10 items-center justify-center rounded transition ${

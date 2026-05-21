@@ -17,7 +17,10 @@ function back(params: Record<string, string>): never {
 export async function updateDisplayName(formData: FormData) {
   const name = String(formData.get("display_name") ?? "").trim();
   const from = String(formData.get("from") ?? "");
-  const carry: Record<string, string> = from ? { from } : {};
+  const demo = String(formData.get("demo") ?? "");
+  const carry: Record<string, string> = {};
+  if (from) carry.from = from;
+  if (demo) carry.demo = demo;
 
   if (!name) back({ ...carry, error: "Display name can't be empty." });
 

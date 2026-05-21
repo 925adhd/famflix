@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { HeroBillboard } from "./HeroBillboard";
 import { IntroAnimation } from "./components/IntroAnimation";
+import { DemoLink } from "./components/DemoLink";
 
 const FAMILY_SLIDES = [
   { src: "/family-2.jpg", position: "center 60%" },
@@ -92,7 +92,7 @@ export default async function Home({
       t.created_at &&
       Date.now() - new Date(t.created_at).getTime() < NEW_WINDOW_MS;
     return (
-      <Link
+      <DemoLink
         key={t.id}
         href={`/title/${t.id}`}
         className="group relative shrink-0 transition-transform duration-300 hover:z-10 hover:scale-110"
@@ -126,7 +126,7 @@ export default async function Home({
             {t.year ?? ""} · {t.kind}
           </p>
         </div>
-      </Link>
+      </DemoLink>
     );
   };
 
@@ -154,7 +154,7 @@ export default async function Home({
           </h2>
           <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
             {continueWatching.map(({ title: t, pct }) => (
-              <Link
+              <DemoLink
                 key={t.id}
                 href={`/title/${t.id}`}
                 className="group relative shrink-0 transition-transform duration-300 hover:z-10 hover:scale-110"
@@ -191,7 +191,7 @@ export default async function Home({
                     {Math.round(pct)}% watched
                   </p>
                 </div>
-              </Link>
+              </DemoLink>
             ))}
           </div>
         </section>
@@ -207,9 +207,9 @@ export default async function Home({
               {canUpload ? (
                 <>
                   No titles yet.{" "}
-                  <Link href="/upload" className="text-white underline">
+                  <DemoLink href="/upload" className="text-white underline">
                     Upload one
-                  </Link>
+                  </DemoLink>
                   .
                 </>
               ) : (

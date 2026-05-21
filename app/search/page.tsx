@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SearchInput } from "./SearchInput";
+import { DemoLink } from "@/app/components/DemoLink";
 
 export default async function SearchPage({
   searchParams,
@@ -53,7 +53,7 @@ export default async function SearchPage({
               </p>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {titles.map((t) => (
-                  <Link
+                  <DemoLink
                     key={t.id}
                     href={`/title/${t.id}`}
                     className="group flex flex-col gap-2"
@@ -78,7 +78,7 @@ export default async function SearchPage({
                         {t.year ?? ""} · {t.kind}
                       </p>
                     </div>
-                  </Link>
+                  </DemoLink>
                 ))}
               </div>
             </>

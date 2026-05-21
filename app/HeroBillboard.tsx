@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { DemoLink } from "./components/DemoLink";
 
 type FeaturedTitle = {
   id: string;
@@ -128,7 +128,7 @@ export function HeroBillboard({
             </p>
           )}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link
+            <DemoLink
               href={`/title/${current.id}`}
               className="flex items-center gap-2 rounded bg-white px-8 py-3 text-base font-semibold text-black transition hover:bg-white/90"
             >
@@ -136,8 +136,8 @@ export function HeroBillboard({
                 <path d="M8 5v14l11-7z" />
               </svg>
               Play
-            </Link>
-            <Link
+            </DemoLink>
+            <DemoLink
               href={`/title/${current.id}`}
               className="flex items-center gap-2 rounded bg-zinc-600/70 px-8 py-3 text-base font-semibold text-white backdrop-blur transition hover:bg-zinc-500/70"
             >
@@ -153,7 +153,7 @@ export function HeroBillboard({
                 <circle cx="12" cy="8" r="0.5" fill="currentColor" />
               </svg>
               More Info
-            </Link>
+            </DemoLink>
           </div>
 
           {cycleTitles.length > 1 && (
@@ -180,12 +180,12 @@ export function HeroBillboard({
             A private collection, just for us.
           </p>
           {canUpload && (
-            <Link
+            <DemoLink
               href="/upload"
               className="mt-4 flex w-fit items-center gap-2 rounded bg-white px-8 py-3 text-base font-semibold text-black transition hover:bg-white/90"
             >
               Upload the first title
-            </Link>
+            </DemoLink>
           )}
         </>
       )}

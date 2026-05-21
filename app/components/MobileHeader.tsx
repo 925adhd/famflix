@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { avatarUrlFor } from "@/lib/avatar";
+import { DemoLink } from "./DemoLink";
 
 export async function MobileHeader() {
   const supabase = await createClient();
@@ -20,7 +20,7 @@ export async function MobileHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-20 flex items-center justify-between bg-gradient-to-b from-black/90 via-black/60 to-transparent px-4 py-3 md:hidden">
-      <Link href="/" aria-label="Famflix">
+      <DemoLink href="/" aria-label="Famflix">
         <Image
           src="/loogo.png"
           alt="Famflix"
@@ -29,8 +29,8 @@ export async function MobileHeader() {
           priority
           className="h-7 w-auto"
         />
-      </Link>
-      <Link
+      </DemoLink>
+      <DemoLink
         href="/profile"
         aria-label="Profile"
         className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-zinc-800 ring-1 ring-white/10"

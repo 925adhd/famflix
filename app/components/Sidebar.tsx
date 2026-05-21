@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { avatarUrlFor } from "@/lib/avatar";
 import { NavItem } from "./NavItem";
+import { DemoLink } from "./DemoLink";
 
 const iconProps = {
   viewBox: "0 0 24 24",
@@ -32,13 +32,13 @@ export async function Sidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center gap-5 border-r border-white/5 bg-black/80 py-6 backdrop-blur md:flex">
-      <Link
+      <DemoLink
         href="/"
         className="mb-6 flex h-10 w-10 items-center justify-center rounded text-lg font-black text-accent"
         aria-label="Home"
       >
         F
-      </Link>
+      </DemoLink>
 
       <NavItem
         href="/"
@@ -87,7 +87,7 @@ export async function Sidebar() {
 
       <div className="flex-1" />
 
-      <Link
+      <DemoLink
         href="/profile"
         title="Profile"
         aria-label="Profile"

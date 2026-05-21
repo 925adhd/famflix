@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addInvite, removeInvite } from "./actions";
 import { InvitesList } from "./InvitesList";
+import { DemoLink } from "@/app/components/DemoLink";
 
 export default async function InvitesPage({
   searchParams,
@@ -27,12 +27,12 @@ export default async function InvitesPage({
       <div className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-md rounded-lg border border-white/10 bg-black/60 p-8 text-center backdrop-blur">
           <h1 className="mb-2 text-xl font-semibold">Admins only</h1>
-          <Link
+          <DemoLink
             href="/"
             className="mt-4 inline-block rounded bg-white/10 px-4 py-2 text-sm hover:bg-white/20"
           >
             Back home
-          </Link>
+          </DemoLink>
         </div>
       </div>
     );
@@ -48,9 +48,9 @@ export default async function InvitesPage({
       <div className="w-full max-w-xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Invited emails</h1>
-          <Link href="/" className="text-sm text-zinc-400 hover:text-white">
+          <DemoLink href="/" className="text-sm text-zinc-400 hover:text-white">
             ← Back
-          </Link>
+          </DemoLink>
         </div>
 
         <p className="mb-6 text-sm text-zinc-400">
