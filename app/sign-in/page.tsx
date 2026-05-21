@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { signIn } from "./actions";
@@ -5,6 +6,18 @@ import { PasswordInput } from "@/app/components/PasswordInput";
 
 const inputClass =
   "w-full rounded bg-zinc-800/80 px-4 py-4 text-base text-white placeholder:text-zinc-400 ring-1 ring-zinc-700 transition focus:bg-zinc-700/80 focus:outline-none focus:ring-zinc-400";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo?: string }>;
+}): Promise<Metadata> {
+  const { demo } = await searchParams;
+  if (demo === "1") {
+    return { title: "Famflix Demo", manifest: "/manifest-demo" };
+  }
+  return {};
+}
 
 export default async function SignInPage({
   searchParams,
