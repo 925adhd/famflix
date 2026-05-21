@@ -32,8 +32,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/sign-in") || path.startsWith("/sign-up");
   const isAuthCallback = path.startsWith("/auth/");
+  const isPublicAsset = path === "/manifest-demo";
 
-  if (!user && !isAuthRoute && !isAuthCallback) {
+  if (!user && !isAuthRoute && !isAuthCallback && !isPublicAsset) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
     return NextResponse.redirect(url);
