@@ -1,8 +1,21 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { avatarUrlFor } from "@/lib/avatar";
 import { DemoLink } from "@/app/components/DemoLink";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo?: string }>;
+}): Promise<Metadata> {
+  const { demo } = await searchParams;
+  if (demo === "1") {
+    return { title: "Famflix Demo", manifest: "/manifest-demo" };
+  }
+  return {};
+}
 
 type ProfileCard = {
   id: string;

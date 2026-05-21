@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { HeroBillboard } from "./HeroBillboard";
 import { IntroAnimation } from "./components/IntroAnimation";
 import { DemoLink } from "./components/DemoLink";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ demo?: string }>;
+}): Promise<Metadata> {
+  const { demo } = await searchParams;
+  if (demo === "1") {
+    return { title: "Famflix Demo", manifest: "/manifest-demo" };
+  }
+  return {};
+}
 
 const FAMILY_SLIDES = [
   { src: "/family-2.jpg", position: "center 60%" },
