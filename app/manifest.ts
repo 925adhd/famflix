@@ -6,6 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Famflix",
     description: "A private streaming library for the family.",
     start_url: "/",
+    id: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
