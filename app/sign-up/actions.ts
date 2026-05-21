@@ -9,6 +9,13 @@ export async function signUp(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("display_name") ?? "").trim();
+  const demo = String(formData.get("demo") ?? "") === "1";
+
+  const back = (params: Record<string, string>) => {
+    const qs = new URLSearchParams(params);
+    if (demo) qs.set("demo", "1");
+    redirect(`/sign-up?${qs.toString()}`);
+  };
 
   const supabase = await createClient();
 
@@ -17,31 +24,30 @@ export async function signUp(formData: FormData) {
     { check_email: email }
   );
   if (inviteError) {
-    redirect(
-      `/sign-up?error=${encodeURIComponent("Signup is unavailable right now. Contact an admin.")}`
-    );
+    back({ error: "Signup is unavailable right now. Contact an admin." });
   }
   if (!invited) {
-    redirect(
-      `/sign-up?error=${encodeURIComponent("This email hasn't been invited. Ask an admin to add you.")}`
-    );
+    back({ error: "This email hasn't been invited. Ask an admin to add you." });
   }
 
   const origin = (await headers()).get("origin") ?? "http://localhost:3000";
+  const callbackQs = new URLSearchParams();
+  if (demo) callbackQs.set("next", "/profiles?demo=1");
+  const callbackSuffix = callbackQs.toString() ? `?${callbackQs.toString()}` : "";
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: { display_name: displayName || email.split("@")[0] },
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback${callbackSuffix}`,
     },
   });
 
   if (error) {
-    redirect(`/sign-up?error=${encodeURIComponent(error.message)}`);
+    back({ error: error.message });
   }
 
   revalidatePath("/", "layout");
-  redirect("/sign-up?success=1");
+  back({ success: "1" });
 }

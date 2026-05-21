@@ -9,14 +9,15 @@ const inputClass =
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; demo?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, demo } = await searchParams;
+  const demoMode = demo === "1";
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col overflow-y-auto bg-gradient-to-b from-[#1a0608] via-[#0e0407] to-black">
       <header className="border-b border-white/10 px-6 py-4 sm:px-12">
-        <Link href="/" aria-label="Famflix">
+        <Link href={demoMode ? "/?demo=1" : "/"} aria-label="Famflix">
           <Image
             src="/loogo.png"
             alt="Famflix"
@@ -44,6 +45,7 @@ export default async function SignInPage({
           )}
 
           <form action={signIn} className="mt-8 flex flex-col gap-3">
+            {demoMode && <input type="hidden" name="demo" value="1" />}
             <input
               type="email"
               name="email"
@@ -69,7 +71,7 @@ export default async function SignInPage({
           <p className="mt-10 text-base text-zinc-400">
             New to Famflix?{" "}
             <Link
-              href="/sign-up"
+              href={demoMode ? "/sign-up?demo=1" : "/sign-up"}
               className="text-white hover:underline"
             >
               Create an account
