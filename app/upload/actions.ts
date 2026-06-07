@@ -112,6 +112,46 @@ export async function createTitle(input: CreateTitleInput) {
   return { ok: true as const, titleId: data.id };
 }
 
+export async function renameTitle(titleId: string, newName: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Not signed in." };
+
+  const trimmed = newName.trim();
+  if (!trimmed) return { ok: false as const, error: "Title can't be empty." };
+  if (trimmed.length > 200)
+    return { ok: false as const, error: "Title is too long." };
+
+  const { data: existing } = await supabase
+    .from("titles")
+    .select("uploaded_by")
+    .eq("id", titleId)
+    .single();
+  if (!existing) return { ok: false as const, error: "Title not found." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const canEdit =
+    existing.uploaded_by === user.id || profile?.role === "admin";
+  if (!canEdit) return { ok: false as const, error: "Not allowed." };
+
+  const { error } = await supabase
+    .from("titles")
+    .update({ name: trimmed })
+    .eq("id", titleId);
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/title/${titleId}`);
+  revalidatePath("/");
+  return { ok: true as const, name: trimmed };
+}
+
 export async function refetchMetadata(titleId: string) {
   const supabase = await createClient();
   const {

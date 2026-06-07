@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { publicUrlFor } from "@/lib/r2";
 import { refetchMetadata } from "@/app/upload/actions";
 import { VideoPlayer } from "./VideoPlayer";
+import { TitleNameEditor } from "./TitleNameEditor";
 
 export default async function TitlePage({
   params,
@@ -109,8 +110,12 @@ export default async function TitlePage({
           )}
           <div className="flex-1">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-semibold">{title.name}</h1>
+              <div className="min-w-0 flex-1">
+                <TitleNameEditor
+                  titleId={title.id}
+                  initialName={title.name}
+                  canEdit={canEdit}
+                />
                 <p className="mt-1 text-sm text-zinc-400">
                   {title.year ?? ""} · {title.kind}
                   {title.duration_seconds
