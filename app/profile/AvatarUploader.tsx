@@ -22,6 +22,7 @@ export function AvatarUploader({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string>(currentPreviewUrl);
+  const [pendingSeed, setPendingSeed] = useState<string | null>(null);
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -38,6 +39,7 @@ export function AvatarUploader({
     setError(null);
     setBusy(true);
     setPreview(URL.createObjectURL(file));
+    setPendingSeed(null);
 
     const signed = await createSignedAvatarUpload(file.type);
     if (!signed.ok) {
@@ -69,17 +71,30 @@ export function AvatarUploader({
     router.refresh();
   }
 
-  async function pickDefault(choice: DefaultChoice) {
+  function pickDefault(choice: DefaultChoice) {
+    setError(null);
+    setPreview(choice.url);
+    setPendingSeed(choice.seed);
+  }
+
+  async function saveDefault() {
+    if (!pendingSeed) return;
     setError(null);
     setBusy(true);
-    setPreview(choice.url);
-    const res = await setDefaultAvatar(choice.seed);
+    const res = await setDefaultAvatar(pendingSeed);
     setBusy(false);
     if (!res.ok) {
       setError(res.error);
       return;
     }
+    setPendingSeed(null);
     router.refresh();
+  }
+
+  function cancelDefault() {
+    setPendingSeed(null);
+    setPreview(currentPreviewUrl);
+    setError(null);
   }
 
   return (
@@ -142,6 +157,27 @@ export function AvatarUploader({
             );
           })}
         </div>
+
+        {pendingSeed && (
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={saveDefault}
+              disabled={busy}
+              className="rounded bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {busy ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={cancelDefault}
+              disabled={busy}
+              className="rounded bg-white/10 px-4 py-1.5 text-sm text-white hover:bg-white/20 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

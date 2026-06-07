@@ -1,6 +1,6 @@
 -- ============================================================================
 -- FAMFLIX — LIVE SUPABASE STATE SNAPSHOT
--- Last updated: 2026-05-01 (titles.genres for genre-row layout)
+-- Last updated: 2026-06-07 (titles.tmdb_score for TMDB rating display)
 -- Project: ourfamflix.vercel.app
 --
 -- This file is a consolidated snapshot of every schema change applied to the
@@ -48,6 +48,8 @@ create table public.titles (
   r2_object_key text,
   status text not null default 'pending' check (status in ('pending', 'ready', 'failed')),
   genres text[],
+  credits_start_seconds int,
+  tmdb_score real,
   created_at timestamptz not null default now()
 );
 

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { HeroBillboard } from "./HeroBillboard";
 import { IntroAnimation } from "./components/IntroAnimation";
 import { DemoLink } from "./components/DemoLink";
+import { ScrollableRow } from "./components/ScrollableRow";
 
 export async function generateMetadata({
   searchParams,
@@ -165,7 +166,7 @@ export default async function Home({
           <h2 className="mb-4 text-xl font-bold text-white">
             Continue Watching
           </h2>
-          <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
+          <ScrollableRow padding="wide">
             {continueWatching.map(({ title: t, pct }) => (
               <DemoLink
                 key={t.id}
@@ -206,7 +207,7 @@ export default async function Home({
                 </div>
               </DemoLink>
             ))}
-          </div>
+          </ScrollableRow>
         </section>
       )}
 
@@ -230,9 +231,7 @@ export default async function Home({
               )}
             </div>
           ) : (
-            <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
-              {list.map(renderCard)}
-            </div>
+            <ScrollableRow padding="wide">{list.map(renderCard)}</ScrollableRow>
           )}
         </section>
       )}
@@ -244,9 +243,9 @@ export default async function Home({
           <h2 className="mb-4 text-xl font-bold text-white">
             <span className="text-accent">Famflix</span> Originals
           </h2>
-          <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
+          <ScrollableRow padding="wide">
             {famflixOriginals.map(renderCard)}
-          </div>
+          </ScrollableRow>
         </section>
       )}
 
@@ -254,9 +253,9 @@ export default async function Home({
         genreRows.map(([genre, items]) => (
           <section key={genre} className="px-6 pb-4 sm:px-12 lg:px-20">
             <h2 className="mb-4 text-xl font-bold text-white">{genre}</h2>
-            <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-4 sm:-mx-12 sm:px-12 lg:-mx-20 lg:px-20">
+            <ScrollableRow padding="wide">
               {items.map(renderCard)}
-            </div>
+            </ScrollableRow>
           </section>
         ))}
 

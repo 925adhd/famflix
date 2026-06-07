@@ -2,29 +2,88 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { publicUrlFor } from "@/lib/r2";
 import { refetchMetadata } from "@/app/upload/actions";
+import {
+  fetchRecommendations,
+  fetchMovieCollectionId,
+  fetchCollectionParts,
+} from "@/lib/tmdb";
 import { VideoPlayer } from "./VideoPlayer";
 import { TitleNameEditor } from "./TitleNameEditor";
+import { DemoLink } from "@/app/components/DemoLink";
+import { ScrollableRow } from "@/app/components/ScrollableRow";
 
 export default async function TitlePage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ meta?: string; message?: string }>;
+  searchParams: Promise<{ meta?: string; message?: string; autoplay?: string }>;
 }) {
   const { id } = await params;
-  const { meta, message } = await searchParams;
+  const { meta, message, autoplay } = await searchParams;
+  const shouldAutoplay = autoplay === "1";
   const supabase = await createClient();
 
   const { data: title } = await supabase
     .from("titles")
     .select(
-      "id, name, year, kind, overview, poster_url, backdrop_url, tmdb_id, r2_object_key, duration_seconds, status, uploaded_by"
+      "id, name, year, kind, overview, poster_url, backdrop_url, tmdb_id, r2_object_key, duration_seconds, status, uploaded_by, genres, credits_start_seconds, rating, tmdb_score"
     )
     .eq("id", id)
     .single();
 
   if (!title || !title.r2_object_key) notFound();
+
+  const { data: others } = await supabase
+    .from("titles")
+    .select("id, name, year, kind, poster_url, genres, tmdb_id")
+    .eq("status", "ready")
+    .neq("id", id);
+
+  const recommendedIds = title.tmdb_id
+    ? await fetchRecommendations(
+        title.tmdb_id,
+        title.kind as "movie" | "show"
+      ).catch(() => [])
+    : [];
+
+  const SIMILAR_LIMIT = 12;
+  const othersList = others ?? [];
+  type OtherTitle = (typeof othersList)[number];
+  const byTmdbId = new Map<number, OtherTitle>();
+  for (const t of othersList) {
+    if (typeof t.tmdb_id === "number") byTmdbId.set(t.tmdb_id, t);
+  }
+
+  const similarTitles = recommendedIds
+    .map((rid) => byTmdbId.get(rid))
+    .filter((t): t is OtherTitle => Boolean(t))
+    .slice(0, SIMILAR_LIMIT);
+
+  let nextUp: { id: string; name: string; poster_url: string | null } | null =
+    null;
+
+  if (title.kind === "movie" && title.tmdb_id && title.year) {
+    const collectionId = await fetchMovieCollectionId(title.tmdb_id).catch(
+      () => null
+    );
+    if (collectionId) {
+      const parts = await fetchCollectionParts(collectionId).catch(() => []);
+      const nextPart = parts
+        .filter((p) => p.year !== null && p.year > title.year!)
+        .sort((a, b) => a.year! - b.year!)
+        .find((p) => byTmdbId.has(p.id));
+      if (nextPart) {
+        const t = byTmdbId.get(nextPart.id);
+        if (t) nextUp = { id: t.id, name: t.name, poster_url: t.poster_url };
+      }
+    }
+  }
+
+  if (!nextUp && similarTitles.length > 0) {
+    const first = similarTitles[0];
+    nextUp = { id: first.id, name: first.name, poster_url: first.poster_url };
+  }
 
   const {
     data: { user },
@@ -51,7 +110,9 @@ export default async function TitlePage({
         .maybeSingle()
     : { data: null };
 
-  const initialPositionSeconds = watch?.position_seconds ?? 0;
+  const initialPositionSeconds = shouldAutoplay
+    ? 0
+    : (watch?.position_seconds ?? 0);
 
   const videoUrl = publicUrlFor(title.r2_object_key);
 
@@ -94,6 +155,10 @@ export default async function TitlePage({
             src={videoUrl}
             titleId={id}
             initialPositionSeconds={initialPositionSeconds}
+            nextUp={nextUp}
+            autoPlay={shouldAutoplay}
+            creditsStartSeconds={title.credits_start_seconds ?? null}
+            canEdit={canEdit}
           />
         </div>
 
@@ -116,11 +181,39 @@ export default async function TitlePage({
                   initialName={title.name}
                   canEdit={canEdit}
                 />
-                <p className="mt-1 text-sm text-zinc-400">
-                  {title.year ?? ""} · {title.kind}
-                  {title.duration_seconds
-                    ? ` · ${Math.round(title.duration_seconds / 60)} min`
-                    : ""}
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-400">
+                  {title.year && <span>{title.year}</span>}
+                  <span>·</span>
+                  <span>{title.kind}</span>
+                  {title.duration_seconds && (
+                    <>
+                      <span>·</span>
+                      <span>{Math.round(title.duration_seconds / 60)} min</span>
+                    </>
+                  )}
+                  {title.rating && (
+                    <>
+                      <span>·</span>
+                      <span className="rounded border border-white/20 px-1.5 py-0.5 text-xs font-semibold text-zinc-200">
+                        {title.rating}
+                      </span>
+                    </>
+                  )}
+                  {title.tmdb_score !== null && title.tmdb_score !== undefined && (
+                    <>
+                      <span>·</span>
+                      <span className="flex items-center gap-1 text-zinc-200">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="h-3.5 w-3.5 text-amber-400"
+                        >
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
+                        </svg>
+                        {title.tmdb_score.toFixed(1)}
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
               {canEdit && (
@@ -158,6 +251,48 @@ export default async function TitlePage({
             )}
           </div>
         </div>
+
+        {similarTitles.length > 0 && (
+          <div className="mt-12">
+            <h2 className="mb-4 text-xl font-bold text-white">More Like This</h2>
+            <ScrollableRow>
+              {similarTitles.map((t) => (
+                <DemoLink
+                  key={t.id}
+                  href={`/title/${t.id}`}
+                  className="group relative shrink-0 transition-transform duration-300 hover:z-10 hover:scale-110"
+                >
+                  <div
+                    className="relative aspect-[2/3] w-36 overflow-hidden rounded bg-gradient-to-br from-zinc-800 to-zinc-900 ring-1 ring-white/5 transition group-hover:ring-white/50 sm:w-44"
+                    style={
+                      t.poster_url
+                        ? {
+                            backgroundImage: `url(${t.poster_url})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                          }
+                        : undefined
+                    }
+                  >
+                    {!t.poster_url && (
+                      <div className="flex h-full items-center justify-center p-3 text-center text-xs text-zinc-400">
+                        {t.name}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2 w-36 sm:w-44">
+                    <p className="truncate text-sm font-medium text-zinc-200">
+                      {t.name}
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      {t.year ?? ""} · {t.kind}
+                    </p>
+                  </div>
+                </DemoLink>
+              ))}
+            </ScrollableRow>
+          </div>
+        )}
       </section>
     </main>
   );

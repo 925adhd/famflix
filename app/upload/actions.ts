@@ -99,6 +99,8 @@ export async function createTitle(input: CreateTitleInput) {
       backdrop_url: match?.backdropUrl ?? input.thumbnailUrl ?? null,
       tmdb_id: match?.tmdbId ?? null,
       genres: match?.genres?.length ? match.genres : null,
+      tmdb_score: match?.voteAverage ?? null,
+      rating: match?.rating ?? null,
       r2_object_key: input.objectKey,
       duration_seconds: input.durationSeconds,
       file_size_bytes: input.fileSizeBytes,
@@ -150,6 +152,48 @@ export async function renameTitle(titleId: string, newName: string) {
   revalidatePath(`/title/${titleId}`);
   revalidatePath("/");
   return { ok: true as const, name: trimmed };
+}
+
+export async function markCreditsStart(
+  titleId: string,
+  seconds: number | null
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Not signed in." };
+
+  if (seconds !== null && (!Number.isFinite(seconds) || seconds < 0)) {
+    return { ok: false as const, error: "Invalid timestamp." };
+  }
+
+  const { data: existing } = await supabase
+    .from("titles")
+    .select("uploaded_by")
+    .eq("id", titleId)
+    .single();
+  if (!existing) return { ok: false as const, error: "Title not found." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const canEdit =
+    existing.uploaded_by === user.id || profile?.role === "admin";
+  if (!canEdit) return { ok: false as const, error: "Not allowed." };
+
+  const value = seconds === null ? null : Math.round(seconds);
+  const { error } = await supabase
+    .from("titles")
+    .update({ credits_start_seconds: value })
+    .eq("id", titleId);
+
+  if (error) return { ok: false as const, error: error.message };
+
+  revalidatePath(`/title/${titleId}`);
+  return { ok: true as const, seconds: value };
 }
 
 export async function refetchMetadata(titleId: string) {
@@ -204,6 +248,8 @@ export async function refetchMetadata(titleId: string) {
       backdrop_url: match.backdropUrl,
       tmdb_id: match.tmdbId,
       genres: match.genres.length ? match.genres : null,
+      tmdb_score: match.voteAverage,
+      rating: match.rating,
       year: existing.year ?? match.year,
     })
     .eq("id", titleId);

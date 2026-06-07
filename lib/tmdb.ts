@@ -61,7 +61,33 @@ export type TmdbMatch = {
   posterUrl: string | null;
   backdropUrl: string | null;
   genres: string[];
+  voteAverage: number | null;
+  rating: string | null;
 };
+
+// Extracts the US certification from the appended release_dates or
+// content_ratings payload that comes back from /movie/{id} or /tv/{id}.
+function extractUsRating(
+  detail: Record<string, unknown>,
+  kind: "movie" | "show"
+): string | null {
+  if (kind === "movie") {
+    const releaseDates = detail.release_dates as
+      | { results?: Array<{ iso_3166_1?: string; release_dates?: Array<{ certification?: string }> }> }
+      | undefined;
+    const us = releaseDates?.results?.find((r) => r.iso_3166_1 === "US");
+    const cert = us?.release_dates?.find(
+      (rd) => typeof rd.certification === "string" && rd.certification.trim() !== ""
+    )?.certification;
+    return cert ? cert.trim() : null;
+  } else {
+    const contentRatings = detail.content_ratings as
+      | { results?: Array<{ iso_3166_1?: string; rating?: string }> }
+      | undefined;
+    const us = contentRatings?.results?.find((r) => r.iso_3166_1 === "US");
+    return us?.rating?.trim() || null;
+  }
+}
 
 export class TmdbError extends Error {}
 
@@ -142,6 +168,7 @@ export async function findBestMatch(
   const first = data.results?.[0];
   if (!first) return null;
 
+  const tmdbId = first.id as number;
   const poster = first.poster_path as string | null;
   const backdrop = first.backdrop_path as string | null;
 
@@ -150,8 +177,29 @@ export async function findBestMatch(
     (first.first_air_date as string | undefined) ??
     "";
 
+  const voteAvg = first.vote_average;
+  const voteAverage =
+    typeof voteAvg === "number" && voteAvg > 0 ? voteAvg : null;
+
+  let rating: string | null = null;
+  try {
+    const detailPath = kind === "movie" ? `/movie/${tmdbId}` : `/tv/${tmdbId}`;
+    const append =
+      kind === "movie" ? "release_dates" : "content_ratings";
+    const detailRes = await fetchWithRetry(
+      `${TMDB_BASE}${detailPath}?append_to_response=${append}`,
+      { headers: authHeaders(), cache: "no-store" }
+    );
+    if (detailRes.ok) {
+      const detail = (await detailRes.json()) as Record<string, unknown>;
+      rating = extractUsRating(detail, kind);
+    }
+  } catch {
+    // Best-effort; leave rating null if the detail call fails.
+  }
+
   return {
-    tmdbId: first.id as number,
+    tmdbId,
     name:
       (first.title as string | undefined) ??
       (first.name as string | undefined) ??
@@ -161,6 +209,94 @@ export async function findBestMatch(
     posterUrl: poster ? `${IMAGE_BASE}/w500${poster}` : null,
     backdropUrl: backdrop ? `${IMAGE_BASE}/w1280${backdrop}` : null,
     genres: mapGenreIds(first.genre_ids, kind),
+    voteAverage,
+    rating,
+  };
+}
+
+// Fetches a movie's collection (franchise) id, if any. Used to figure
+// out the next sequel for autoplay. Returns null for movies not in a
+// collection or for TV shows.
+export async function fetchMovieCollectionId(
+  tmdbId: number
+): Promise<number | null> {
+  const res = await fetch(`${TMDB_BASE}/movie/${tmdbId}`, {
+    headers: authHeaders(),
+    next: { revalidate: 60 * 60 * 24 * 7 },
+  });
+  if (!res.ok) return null;
+  const data: { belongs_to_collection?: { id?: unknown } | null } =
+    await res.json();
+  const c = data.belongs_to_collection;
+  return c && typeof c.id === "number" ? c.id : null;
+}
+
+// Fetches every part of a TMDB collection. Returns the tmdb_id and
+// release year for each movie so we can pick the next-by-year sequel.
+export async function fetchCollectionParts(
+  collectionId: number
+): Promise<Array<{ id: number; year: number | null }>> {
+  const res = await fetch(`${TMDB_BASE}/collection/${collectionId}`, {
+    headers: authHeaders(),
+    next: { revalidate: 60 * 60 * 24 * 7 },
+  });
+  if (!res.ok) return [];
+  const data: { parts?: Array<{ id?: unknown; release_date?: unknown }> } =
+    await res.json();
+  return (data.parts ?? [])
+    .map((p) => {
+      const id = typeof p.id === "number" ? p.id : null;
+      const date = typeof p.release_date === "string" ? p.release_date : "";
+      const year = date ? Number(date.slice(0, 4)) || null : null;
+      return id !== null ? { id, year } : null;
+    })
+    .filter((p): p is { id: number; year: number | null } => p !== null);
+}
+
+// Fetches TMDB's curated "recommendations" for a given title, returning
+// the recommended TMDB IDs in TMDB's ranked order. Used to power the
+// "More Like This" row by intersecting against our local library.
+export async function fetchRecommendations(
+  tmdbId: number,
+  kind: "movie" | "show"
+): Promise<number[]> {
+  const path =
+    kind === "movie"
+      ? `/movie/${tmdbId}/recommendations`
+      : `/tv/${tmdbId}/recommendations`;
+  const res = await fetch(`${TMDB_BASE}${path}`, {
+    headers: authHeaders(),
+    next: { revalidate: 60 * 60 * 24 },
+  });
+
+  if (!res.ok) return [];
+
+  const data: { results?: Array<{ id?: unknown }> } = await res.json();
+  return (data.results ?? [])
+    .map((r) => (typeof r.id === "number" ? r.id : null))
+    .filter((id): id is number => id !== null);
+}
+
+// Fetches TMDB score + US content rating for an already-stored tmdb_id.
+// Used by the backfill script.
+export async function fetchScoreAndRatingByTmdbId(
+  tmdbId: number,
+  kind: "movie" | "show"
+): Promise<{ voteAverage: number | null; rating: string | null }> {
+  const path = kind === "movie" ? `/movie/${tmdbId}` : `/tv/${tmdbId}`;
+  const append = kind === "movie" ? "release_dates" : "content_ratings";
+  const res = await fetchWithRetry(
+    `${TMDB_BASE}${path}?append_to_response=${append}`,
+    { headers: authHeaders(), cache: "no-store" }
+  );
+
+  if (!res.ok) throw new TmdbError(`TMDB ${path} responded ${res.status}`);
+
+  const detail = (await res.json()) as Record<string, unknown>;
+  const voteAvg = detail.vote_average;
+  return {
+    voteAverage: typeof voteAvg === "number" && voteAvg > 0 ? voteAvg : null,
+    rating: extractUsRating(detail, kind),
   };
 }
 
